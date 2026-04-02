@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { seedDemoData } from '../utils/seedDemoData';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -62,6 +63,13 @@ const EmptyState = () => {
 /* ════════════════════════════════════════════════════════════════ */
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const [seeded, setSeeded] = useState(false);
+
+  // Seed demo data on first load if empty
+  useEffect(() => {
+    const didSeed = seedDemoData();
+    if (didSeed) setSeeded(true); // force re-render to pick up seeded data
+  }, []);
 
   // Load transactions from localStorage (saved by the Transactions page)
   const storedTx = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');

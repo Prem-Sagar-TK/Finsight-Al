@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 const Toggle = ({ enabled, onChange, label, description }) => (
   <div className="flex items-start justify-between py-4 border-b border-gray-100 last:border-0">
@@ -28,6 +29,12 @@ const Settings = () => {
   });
 
   const [saved, setSaved] = useState(false);
+  const { darkMode: isDark, toggleDarkMode } = useTheme();
+
+  // Sync initial state with ThemeContext
+  React.useEffect(() => {
+    if (prefs.darkMode !== isDark) setPrefs(p => ({ ...p, darkMode: isDark }));
+  }, [isDark]);
 
   const toggle = (key) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
 
@@ -76,9 +83,9 @@ const Settings = () => {
         <h3 className="text-lg font-black text-gray-900 mb-1">Display</h3>
         <p className="text-sm text-gray-400 font-medium mb-5">Customise how the app looks</p>
         <Toggle
-          enabled={prefs.darkMode} onChange={() => toggle('darkMode')}
+          enabled={prefs.darkMode} onChange={() => { toggle('darkMode'); toggleDarkMode(); }}
           label="Dark Mode"
-          description="Switch to a dark colour scheme (coming soon)"
+          description="Switch to a dark colour scheme"
         />
         <Toggle
           enabled={prefs.compactView} onChange={() => toggle('compactView')}

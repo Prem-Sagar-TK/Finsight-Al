@@ -70,3 +70,62 @@ html {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(0,0,0,0.1);
 }
+
+/* ── Dark Mode ─────────────────────────────────────────── */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body,
+html.dark .bg-\[\#eef0f4\] {
+  background-color: #0a0a0a !important;
+}
+
+/* Cards + panels */
+html.dark .bg-white {
+  background-color: #1a1a1a !important;
+  border-color: #2a2a2a !important;
+}
+
+/* Text overrides */
+html.dark .text-gray-900 { color: #f1f1f1 !important; }
+html.dark .text-gray-800 { color: #e5e5e5 !important; }
+html.dark .text-gray-700 { color: #d4d4d4 !important; }
+html.dark .text-gray-600 { color: #a3a3a3 !important; }
+html.dark .text-gray-500 { color: #8a8a8a !important; }
+html.dark .text-gray-400 { color: #737373 !important; }
+
+/* Inputs & selects */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #1a1a1a !important;
+  border-color: #333 !important;
+  color: #f1f1f1 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #666 !important;
+}
+
+/* Borders */
+html.dark .border-gray-100 { border-color: #2a2a2a !important; }
+html.dark .border-gray-200 { border-color: #333 !important; }
+html.dark .divide-gray-50 > * + * { border-color: #2a2a2a !important; }
+
+/* Stat colored backgrounds */
+html.dark .bg-gray-50  { background-color: #1a1a1a !important; }
+html.dark .bg-gray-100 { background-color: #222 !important; }
+
+/* Keep accent backgrounds softer in dark mode */
+html.dark .bg-green-50   { background-color: rgba(34, 197, 94, 0.1) !important; }
+html.dark .bg-red-50     { background-color: rgba(239, 68, 68, 0.1) !important; }
+html.dark .bg-blue-50    { background-color: rgba(59, 130, 246, 0.1) !important; }
+html.dark .bg-yellow-50  { background-color: rgba(245, 158, 11, 0.1) !important; }
+html.dark .bg-purple-50  { background-color: rgba(139, 92, 246, 0.1) !important; }
+
+/* Scrollbar */
+html.dark ::-webkit-scrollbar { width: 6px; }
+html.dark ::-webkit-scrollbar-track { background: #111; }
+html.dark ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }

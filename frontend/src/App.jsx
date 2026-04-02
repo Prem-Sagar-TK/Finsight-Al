@@ -1,11 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import Insights from './pages/Insights';
+import Budgets from './pages/Budgets';
+import Subscriptions from './pages/Subscriptions';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
@@ -34,8 +38,9 @@ function AppRoutes() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="transactions" element={<Transactions />} />
-          <Route path="budgets" element={<div className="p-8">Budgets Page Content</div>} />
-          <Route path="insights" element={<div className="p-8">AI Insights Detailed Content</div>} />
+          <Route path="insights" element={<Insights />} />
+          <Route path="budgets" element={<Budgets />} />
+          <Route path="subscriptions" element={<Subscriptions />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="billing" element={<Billing />} />
@@ -47,11 +52,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

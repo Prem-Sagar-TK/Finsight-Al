@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import AiChat from '../pages/AiChat';
 
 /* ── Close dropdown on outside click ─────────────────────────── */
 function useOutsideClick(ref, callback) {
@@ -28,17 +30,22 @@ const navItems = [
     name: 'AI Insights', path: '/dashboard/insights',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" /></svg>,
   },
+  {
+    name: 'Subscriptions', path: '/dashboard/subscriptions',
+    icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
+  },
 ];
 
 /* Page titles per route */
 const pageTitles = {
-  '/dashboard':              { title: 'Overview',         sub: (name) => `Welcome back, ${name}!` },
-  '/dashboard/transactions': { title: 'Transactions',     sub: () => 'Manage your income and expenses' },
-  '/dashboard/budgets':      { title: 'Budgets',          sub: () => 'Track your spending limits' },
-  '/dashboard/insights':     { title: 'AI Insights',      sub: () => 'Personalised recommendations from AI' },
-  '/dashboard/profile':      { title: 'My Profile',       sub: () => 'Manage your personal information' },
-  '/dashboard/settings':     { title: 'Settings',         sub: () => 'Customise your experience' },
-  '/dashboard/billing':      { title: 'Billing & Plan',   sub: () => 'Manage your subscription' },
+  '/dashboard':                  { title: 'Overview',          sub: (name) => `Welcome back, ${name}!` },
+  '/dashboard/transactions':     { title: 'Transactions',      sub: () => 'Manage your income and expenses' },
+  '/dashboard/budgets':          { title: 'Budget Planner',    sub: () => 'Set and track your monthly spending limits' },
+  '/dashboard/insights':         { title: 'AI Insights',       sub: () => 'Personalised recommendations from AI' },
+  '/dashboard/subscriptions':    { title: 'Subscriptions',     sub: () => 'Auto-detected recurring expenses' },
+  '/dashboard/profile':          { title: 'My Profile',        sub: () => 'Manage your personal information' },
+  '/dashboard/settings':         { title: 'Settings',          sub: () => 'Customise your experience' },
+  '/dashboard/billing':          { title: 'Billing & Plan',    sub: () => 'Manage your subscription' },
 };
 
 /* Avatar initials helper */
@@ -64,6 +71,7 @@ const DashboardLayout = () => {
   useOutsideClick(profileRef, () => setProfileOpen(false));
 
   const handleLogout = () => { logout(); navigate('/'); };
+  const { darkMode, toggleDarkMode } = useTheme();
 
   /* Static sample notifications — replace with real data when backend ready */
   const notifications = [
@@ -156,6 +164,19 @@ const DashboardLayout = () => {
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:shadow-md transition-all hover:border-[#d4ff3f]"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? (
+                <svg className="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+              )}
+            </button>
 
             {/* ── Notification Bell ─────────────── */}
             <div className="relative" ref={notifRef}>
@@ -277,6 +298,8 @@ const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+      {/* AI Chat floating widget — available on all dashboard pages */}
+      <AiChat />
     </div>
   );
 };
