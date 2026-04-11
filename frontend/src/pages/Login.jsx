@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,7 +67,7 @@ const Login = () => {
             <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-600">
               <input type="checkbox" className="rounded" /> Remember me
             </label>
-            <a href="#" className="text-sm font-bold text-black hover:underline">Forgot password?</a>
+            <a href="#" className="text-sm font-bold text-black hover:underline" onClick={(e) => { e.preventDefault(); window.location.href = '/forgot-password'; }}>Forgot password?</a>
           </div>
           <button type="submit" disabled={isLoading}
             className="w-full bg-[#d4ff3f] text-black font-extrabold text-base py-4 rounded-xl hover:bg-[#c3ec37] active:bg-[#b8e62e] transition-colors shadow-sm disabled:opacity-60 mt-2">

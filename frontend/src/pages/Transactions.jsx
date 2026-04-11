@@ -167,12 +167,14 @@ const Transactions = () => {
   const fileRef = useRef(null);
   const location = useLocation();
 
-  /* Auto-trigger from Dashboard empty-state buttons */
+  /* Auto-trigger from Dashboard empty-state buttons or global search */
   useEffect(() => {
     if (location.state?.openAdd) {
       setForm(blank()); setIsEdit(false); setModalOpen(true);
     } else if (location.state?.openCSV) {
       setTimeout(() => fileRef.current?.click(), 100);
+    } else if (location.state?.searchPrefill) {
+      setSearch(location.state.searchPrefill);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -255,6 +257,20 @@ const Transactions = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  /* CSV export */
+  const handleExport = () => {
+    const rows = [['Date', 'Description', 'Type', 'Category', 'Amount', 'Note']];
+    filtered.forEach((t) => {
+      rows.push([t.date, t.description, t.type, t.category, t.amount, t.note || '']);
+    });
+    const csv = rows.map((r) => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `finsight_transactions_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   /* Filter + sort */
@@ -344,7 +360,7 @@ const Transactions = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {/* CSV Upload */}
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSV} />
           <button onClick={() => fileRef.current?.click()}
@@ -353,8 +369,20 @@ const Transactions = () => {
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            Import CSV
+            Import
           </button>
+
+          {/* CSV Export */}
+          {transactions.length > 0 && (
+            <button onClick={handleExport}
+              className="flex items-center gap-2 bg-gray-100 text-black font-bold text-sm px-4 py-2.5 rounded-full hover:bg-gray-200 transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export
+            </button>
+          )}
 
           {/* Add */}
           <button onClick={openAdd}

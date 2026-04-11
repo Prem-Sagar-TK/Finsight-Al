@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -34,6 +34,10 @@ const navItems = [
     name: 'Subscriptions', path: '/dashboard/subscriptions',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
   },
+  {
+    name: 'Reports', path: '/dashboard/reports',
+    icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+  },
 ];
 
 /* Page titles per route */
@@ -43,6 +47,7 @@ const pageTitles = {
   '/dashboard/budgets':          { title: 'Budget Planner',    sub: () => 'Set and track your monthly spending limits' },
   '/dashboard/insights':         { title: 'AI Insights',       sub: () => 'Personalised recommendations from AI' },
   '/dashboard/subscriptions':    { title: 'Subscriptions',     sub: () => 'Auto-detected recurring expenses' },
+  '/dashboard/reports':          { title: 'Reports',           sub: () => 'Download & analyse your financial reports' },
   '/dashboard/profile':          { title: 'My Profile',        sub: () => 'Manage your personal information' },
   '/dashboard/settings':         { title: 'Settings',          sub: () => 'Customise your experience' },
   '/dashboard/billing':          { title: 'Billing & Plan',    sub: () => 'Manage your subscription' },
@@ -51,6 +56,67 @@ const pageTitles = {
 /* Avatar initials helper */
 const initials = (name = '') =>
   name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
+
+/* ── Generate dynamic notifications based on real data ──── */
+function generateNotifications() {
+  const notifications = [];
+  const now = new Date();
+  const transactions = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+  const budgets = JSON.parse(localStorage.getItem('finsight_budgets') || '[]');
+
+  // Budget alerts
+  const currentBudgets = budgets.filter(b => b.month === now.getMonth() + 1 && b.year === now.getFullYear());
+  const catMap = {};
+  transactions
+    .filter(t => t.type === 'expense')
+    .filter(t => {
+      const d = new Date(t.date);
+      return d.getMonth() + 1 === now.getMonth() + 1 && d.getFullYear() === now.getFullYear();
+    })
+    .forEach(t => {
+      const cat = t.category || 'Other';
+      catMap[cat] = (catMap[cat] || 0) + Number(t.amount);
+    });
+
+  currentBudgets.forEach(b => {
+    const spent = catMap[b.category] || 0;
+    const pct = b.limit > 0 ? Math.round((spent / b.limit) * 100) : 0;
+    if (pct >= 100) {
+      notifications.push({ id: `budget-over-${b.category}`, icon: '🚨', title: 'Over Budget!', body: `${b.category} is ${pct}% — you've exceeded your limit.`, time: 'Now' });
+    } else if (pct >= 80) {
+      notifications.push({ id: `budget-near-${b.category}`, icon: '⚠️', title: 'Budget Alert', body: `${b.category} is at ${pct}% of your limit.`, time: 'Now' });
+    }
+  });
+
+  // Recent transaction
+  if (transactions.length > 0) {
+    const recent = [...transactions].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))[0];
+    notifications.push({
+      id: `recent-tx`, icon: recent.type === 'income' ? '💰' : '💳',
+      title: recent.type === 'income' ? 'Income Recorded' : 'Expense Recorded',
+      body: `${recent.description} — $${Number(recent.amount).toLocaleString()}`,
+      time: 'Recent',
+    });
+  }
+
+  // Savings rate tip
+  const totalInc = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+  const totalExp = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+  if (totalInc > 0) {
+    const savingsRate = ((totalInc - totalExp) / totalInc * 100).toFixed(0);
+    if (savingsRate < 20) {
+      notifications.push({ id: 'savings-tip', icon: '💡', title: 'AI Tip', body: `Your savings rate is ${savingsRate}%. Try to save at least 20%.`, time: 'Tip' });
+    } else {
+      notifications.push({ id: 'savings-good', icon: '🏆', title: 'Great Saving!', body: `You're saving ${savingsRate}% of income — keep it up!`, time: 'Tip' });
+    }
+  }
+
+  if (notifications.length === 0) {
+    notifications.push({ id: 'welcome', icon: '👋', title: 'Welcome!', body: 'Add transactions to get personalised notifications here.', time: 'Now' });
+  }
+
+  return notifications;
+}
 
 /* ════════════════════════════════════════════════════════════════ */
 const DashboardLayout = () => {
@@ -63,28 +129,113 @@ const DashboardLayout = () => {
   const [notifOpen,   setNotifOpen]   = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifRead,   setNotifRead]   = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen,  setSearchOpen]  = useState(false);
+  const searchRef = useRef(null);
 
   const notifRef   = useRef(null);
   const profileRef = useRef(null);
 
   useOutsideClick(notifRef,   () => setNotifOpen(false));
   useOutsideClick(profileRef, () => setProfileOpen(false));
+  useOutsideClick(searchRef,  () => setSearchOpen(false));
 
   const handleLogout = () => { logout(); navigate('/'); };
   const { darkMode, toggleDarkMode } = useTheme();
 
-  /* Static sample notifications — replace with real data when backend ready */
-  const notifications = [
-    { id: 1, icon: '💡', title: 'AI Tip',           body: 'You can save more by reducing dining spend.', time: 'Just now' },
-    { id: 2, icon: '⚠️', title: 'Budget Alert',      body: 'Food & Drinks is at 92% of your limit.',     time: '2 min ago' },
-    { id: 3, icon: '✅', title: 'Transaction Added',  body: 'New transaction was recorded successfully.',  time: '10 min ago' },
-  ];
+  // Close mobile sidebar on navigation
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+
+  /* Dynamic notifications */
+  const notifications = useMemo(() => generateNotifications(), [location.pathname]);
+
+  /* Search transactions */
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const tx = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+    const q = searchQuery.toLowerCase();
+    return tx
+      .filter(t => t.description?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q) || t.note?.toLowerCase().includes(q))
+      .slice(0, 5);
+  }, [searchQuery]);
 
   const page = pageTitles[location.pathname] || { title: 'Dashboard', sub: () => '' };
 
   return (
     <div className="min-h-screen bg-[#eef0f4] flex font-sans">
-      {/* ── Sidebar ──────────────────────────────────────────────── */}
+      {/* ── Mobile Sidebar Overlay ──────────────────────────── */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          {/* Drawer */}
+          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#111] text-white flex flex-col shadow-2xl animate-fade-up">
+            {/* Logo */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="bg-[#d4ff3f] rounded-lg p-1.5">
+                  <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span className="text-lg font-extrabold tracking-tight">FinSight AI</span>
+              </div>
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            {/* Nav */}
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-3 mb-3">Menu</p>
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  end={item.path === '/dashboard'}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                      isActive ? 'bg-[#d4ff3f] text-black shadow-sm' : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  {item.icon}
+                  {item.name}
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* User & Logout */}
+            <div className="p-4 m-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#d4ff3f] flex items-center justify-center shrink-0">
+                  <span className="text-black text-xs font-black">{initials(currentUser?.name)}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-none truncate">{currentUser?.name || 'User'}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5 truncate">{userEmail}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-red-400 hover:text-white hover:bg-red-500 rounded-xl py-2 transition-all"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16,17 21,12 16,7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Log Out
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ── Desktop Sidebar ──────────────────────────────────── */}
       <aside className="hidden md:flex w-64 bg-[#111] text-white flex-col my-4 ml-4 rounded-3xl shadow-xl overflow-hidden">
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
@@ -146,23 +297,87 @@ const DashboardLayout = () => {
       {/* ── Main ─────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-20 flex items-center justify-between px-8">
-          <div>
-            <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">{page.title}</h2>
-            <p className="text-sm text-gray-500 font-medium">{page.sub(userName)}</p>
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
+          <div className="flex items-center gap-3">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm"
+              aria-label="Open menu"
+            >
+              <svg className="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <div>
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">{page.title}</h2>
+              <p className="text-xs md:text-sm text-gray-500 font-medium hidden sm:block">{page.sub(userName)}</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Search */}
-            <div className="relative hidden sm:block">
+            <div className="relative hidden sm:block" ref={searchRef}>
               <input
                 type="text"
-                placeholder="Search anything..."
-                className="pl-9 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#d4ff3f] w-56 transition-all"
+                placeholder="Search transactions..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                onFocus={() => setSearchOpen(true)}
+                className="pl-9 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#d4ff3f] w-48 lg:w-56 transition-all"
               />
               <svg className="w-4 h-4 absolute left-3 top-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
+
+              {/* Search results dropdown */}
+              {searchOpen && searchQuery.trim() && (
+                <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                  {searchResults.length > 0 ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-wide">{searchResults.length} result{searchResults.length !== 1 ? 's' : ''}</p>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+                        {searchResults.map((tx) => (
+                          <button
+                            key={tx.id}
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSearchOpen(false);
+                              navigate('/dashboard/transactions', { state: { searchPrefill: tx.description } });
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${tx.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
+                              {tx.type === 'income' ? '↑' : '↓'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-gray-900 truncate">{tx.description}</p>
+                              <p className="text-xs text-gray-400">{tx.category} · ${Number(tx.amount).toLocaleString()}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSearchOpen(false);
+                          navigate('/dashboard/transactions', { state: { searchPrefill: searchQuery } });
+                          setSearchQuery('');
+                        }}
+                        className="w-full px-4 py-3 text-xs font-bold text-center text-gray-400 hover:text-black border-t border-gray-100 transition-colors"
+                      >
+                        View all in Transactions →
+                      </button>
+                    </>
+                  ) : (
+                    <div className="px-4 py-6 text-center">
+                      <p className="text-sm font-bold text-gray-400">No results found</p>
+                      <p className="text-xs text-gray-300 mt-1">Try a different search term</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dark mode toggle */}
@@ -219,11 +434,6 @@ const DashboardLayout = () => {
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="px-5 py-3 border-t border-gray-100 text-center">
-                    <button className="text-xs font-bold text-gray-400 hover:text-black transition-colors">
-                      View all notifications
-                    </button>
                   </div>
                 </div>
               )}
@@ -294,10 +504,30 @@ const DashboardLayout = () => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto px-8 pb-8">
+        <main className="flex-1 overflow-auto px-4 md:px-8 pb-20 md:pb-8">
           <Outlet />
         </main>
       </div>
+
+      {/* ── Mobile Bottom Navigation ──────────────────────────── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex items-center justify-around py-2 px-2 safe-bottom">
+        {navItems.slice(0, 5).map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.path}
+            end={item.path === '/dashboard'}
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all ${
+                isActive ? 'text-black' : 'text-gray-400'
+              }`
+            }
+          >
+            {item.icon}
+            <span className="text-[9px] font-bold">{item.name.split(' ')[0]}</span>
+          </NavLink>
+        ))}
+      </nav>
+
       {/* AI Chat floating widget — available on all dashboard pages */}
       <AiChat />
     </div>

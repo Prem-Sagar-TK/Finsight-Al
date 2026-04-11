@@ -4,12 +4,14 @@ import { ThemeProvider } from './context/ThemeContext';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Insights from './pages/Insights';
 import Budgets from './pages/Budgets';
 import Subscriptions from './pages/Subscriptions';
+import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
@@ -29,6 +31,7 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={
@@ -41,6 +44,7 @@ function AppRoutes() {
           <Route path="insights" element={<Insights />} />
           <Route path="budgets" element={<Budgets />} />
           <Route path="subscriptions" element={<Subscriptions />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="billing" element={<Billing />} />

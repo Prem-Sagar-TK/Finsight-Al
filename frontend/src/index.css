@@ -17,6 +17,10 @@ html {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50%       { transform: translateY(-8px); }
@@ -31,6 +35,7 @@ html {
 }
 
 .animate-fade-up   { animation: fadeInUp 0.6s ease both; }
+.animate-slide-in  { animation: slideInLeft 0.3s ease both; }
 .animate-float     { animation: float 4s ease-in-out infinite; }
 .animate-delay-100 { animation-delay: 0.1s; }
 .animate-delay-200 { animation-delay: 0.2s; }
@@ -71,7 +76,14 @@ html {
   border: 1px solid rgba(0,0,0,0.1);
 }
 
+/* ── Safe area for mobile bottom nav ───────────────────── */
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* ══════════════════════════════════════════════════════════ */
 /* ── Dark Mode ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════ */
 html.dark {
   color-scheme: dark;
 }
@@ -124,8 +136,76 @@ html.dark .bg-red-50     { background-color: rgba(239, 68, 68, 0.1) !important; 
 html.dark .bg-blue-50    { background-color: rgba(59, 130, 246, 0.1) !important; }
 html.dark .bg-yellow-50  { background-color: rgba(245, 158, 11, 0.1) !important; }
 html.dark .bg-purple-50  { background-color: rgba(139, 92, 246, 0.1) !important; }
+html.dark .bg-orange-50  { background-color: rgba(249, 115, 22, 0.1) !important; }
+html.dark .bg-pink-50    { background-color: rgba(236, 72, 153, 0.1) !important; }
+html.dark .bg-indigo-50  { background-color: rgba(99, 102, 241, 0.1) !important; }
+
+/* Category badge colors in dark mode */
+html.dark .bg-blue-100    { background-color: rgba(59, 130, 246, 0.15) !important; }
+html.dark .bg-orange-100  { background-color: rgba(249, 115, 22, 0.15) !important; }
+html.dark .bg-purple-100  { background-color: rgba(139, 92, 246, 0.15) !important; }
+html.dark .bg-pink-100    { background-color: rgba(236, 72, 153, 0.15) !important; }
+html.dark .bg-yellow-100  { background-color: rgba(245, 158, 11, 0.15) !important; }
+html.dark .bg-green-100   { background-color: rgba(34, 197, 94, 0.15) !important; }
+html.dark .bg-red-100     { background-color: rgba(239, 68, 68, 0.15) !important; }
+html.dark .bg-indigo-100  { background-color: rgba(99, 102, 241, 0.15) !important; }
+html.dark .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.15) !important; }
+html.dark .bg-teal-100    { background-color: rgba(20, 184, 166, 0.15) !important; }
+html.dark .bg-cyan-100    { background-color: rgba(6, 182, 212, 0.15) !important; }
+html.dark .bg-rose-100    { background-color: rgba(244, 63, 94, 0.15) !important; }
+html.dark .bg-lime-100    { background-color: rgba(132, 204, 22, 0.15) !important; }
+
+/* Modals & overlays */
+html.dark .bg-black\/40 {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Shadows — softer in dark mode */
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Hover states */
+html.dark .hover\:bg-gray-50:hover { background-color: #222 !important; }
+html.dark .hover\:bg-gray-100:hover { background-color: #2a2a2a !important; }
+html.dark .hover\:bg-gray-200:hover { background-color: #333 !important; }
+
+/* Bottom nav bar */
+html.dark nav.fixed.bottom-0 {
+  background-color: #111 !important;
+  border-color: #222 !important;
+}
+
+/* Dropdowns */
+html.dark .bg-white.rounded-2xl {
+  background-color: #1a1a1a !important;
+}
 
 /* Scrollbar */
 html.dark ::-webkit-scrollbar { width: 6px; }
 html.dark ::-webkit-scrollbar-track { background: #111; }
 html.dark ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+/* ── Responsive Fixes ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  .grid-cols-\[2fr_1fr_1fr_1fr_auto\] {
+    grid-template-columns: 1fr !important;
+    gap: 0.25rem !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 767px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
