@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
-import { seedDemoData } from '../utils/seedDemoData';
+import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -63,34 +63,48 @@ const EmptyState = () => {
 /* ════════════════════════════════════════════════════════════════ */
 const Dashboard = () => {
   const { currentUser } = useAuth();
-  const [seeded, setSeeded] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Seed demo data on first load if empty
   useEffect(() => {
-    const didSeed = seedDemoData();
-    if (didSeed) setSeeded(true); // force re-render to pick up seeded data
+    const fetchData = async () => {
+      try {
+        const [txRes, insRes] = await Promise.all([
+          api.get('/transactions'),
+          api.get('/insights'),
+        ]);
+        setTransactions(txRes.data);
+        setInsights(insRes.data);
+      } catch (err) {
+        console.error('Dashboard fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  // Load transactions from localStorage (saved by the Transactions page)
-  const storedTx = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="animate-spin w-8 h-8 border-4 border-[#d4ff3f] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
-  const hasData = storedTx.length > 0;
+  const hasData = transactions.length > 0;
 
-  // Compute real totals from stored transactions
-  const totalIncome  = storedTx.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-  const totalExpense = storedTx.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+  const totalIncome  = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+  const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
   const balance      = totalIncome - totalExpense;
   const savingsRate  = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
 
-  // Health score — simple formula
-  const healthScore = Math.min(
-    100,
-    Math.max(0, Math.round(savingsRate * 0.6 + (balance > 0 ? 30 : 0) + 10))
-  );
+  const healthScore = Math.min(100, Math.max(0, Math.round(savingsRate * 0.6 + (balance > 0 ? 30 : 0) + 10)));
 
   // Category spending breakdown
   const categoryMap = {};
-  storedTx
+  transactions
     .filter((t) => t.type === 'expense')
     .forEach((t) => {
       const cat = t.category || 'Other';
@@ -98,19 +112,9 @@ const Dashboard = () => {
     });
   const categorySpending = Object.entries(categoryMap).map(([category, amount]) => ({ category, amount }));
 
-  // AI insights based on real data
-  const aiInsights = [];
-  if (hasData) {
-    if (savingsRate > 0)  aiInsights.push(`You are saving ${savingsRate}% of your income — ${savingsRate >= 20 ? 'great work!' : 'try to save at least 20%.'}`);
-    if (totalExpense > 0 && categorySpending.length > 0) {
-      const top = [...categorySpending].sort((a, b) => b.amount - a.amount)[0];
-      const pct = Math.round((top.amount / totalExpense) * 100);
-      aiInsights.push(`Your biggest expense category is ${top.category} at ${pct}% of total spending.`);
-    }
-    if (balance < 0) aiInsights.push('Your expenses exceed your income this month. Review your spending to avoid debt.');
-  }
+  // AI insights
+  const aiInsights = insights?.insights || [];
 
-  // Chart data
   const COLORS = ['#d4ff3f', '#111', '#6b7280', '#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
 
   const barData = {
@@ -152,7 +156,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stat cards — always show computed (zero if no data) */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           label="Current Balance" value={`$${balance.toLocaleString()}`}
@@ -181,7 +185,6 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Main content — empty state or real charts */}
       {!hasData ? (
         <EmptyState />
       ) : (

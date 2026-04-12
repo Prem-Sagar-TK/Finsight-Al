@@ -1,15 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import api from '../utils/api';
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Education', 'Utilities', 'Other'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CAT_ICONS = { Food: '🍔', Transport: '🚗', Shopping: '🛍️', Entertainment: '🎮', Health: '💊', Education: '📚', Utilities: '💡', Other: '📦' };
 
 const now = new Date();
-const CURRENT_MONTH = now.getMonth() + 1;
+const CURRENT_MONTH = now.getMonth(); // 0-indexed to match backend
 const CURRENT_YEAR  = now.getFullYear();
 
 /* ── Budget Modal ──────────────────────────────────────────────────── */
-const BudgetModal = ({ existing, category, onSave, onClose }) => {
+const BudgetModal = ({ existing, category, onSave, onClose, saving }) => {
   const [limit, setLimit] = useState(existing ? String(existing.limit) : '');
 
   const handleSave = () => {
@@ -40,7 +41,9 @@ const BudgetModal = ({ existing, category, onSave, onClose }) => {
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50">Cancel</button>
-          <button onClick={handleSave} className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-gray-800 transition-colors">Save Budget</button>
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-gray-800 transition-colors disabled:opacity-60">
+            {saving ? 'Saving…' : 'Save Budget'}
+          </button>
         </div>
       </div>
     </div>
@@ -115,21 +118,39 @@ const BudgetCard = ({ category, limit, spent, onEdit, onDelete }) => {
 const Budgets = () => {
   const [selectedMonth, setSelectedMonth] = useState(CURRENT_MONTH);
   const [selectedYear]  = useState(CURRENT_YEAR);
-  const [budgets, setBudgets] = useState(() => JSON.parse(localStorage.getItem('finsight_budgets') || '[]'));
-  const [modal, setModal] = useState(null); // null | { category, existing }
+  const [budgets, setBudgets]   = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [modal, setModal]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  // Save to localStorage whenever budgets change
-  useEffect(() => { localStorage.setItem('finsight_budgets', JSON.stringify(budgets)); }, [budgets]);
+  /* Fetch budgets and transactions from backend */
+  const fetchData = useCallback(async () => {
+    try {
+      const [bRes, tRes] = await Promise.all([
+        api.get('/budgets', { params: { month: selectedMonth, year: selectedYear } }),
+        api.get('/transactions'),
+      ]);
+      setBudgets(bRes.data);
+      setTransactions(tRes.data);
+    } catch (err) {
+      setApiError('Failed to load budget data.');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Get actual spending from transactions for selected month/year
-  const transactions = useMemo(() => JSON.parse(localStorage.getItem('finsight_transactions') || '[]'), []);
   const spendingByCategory = useMemo(() => {
     const map = {};
     transactions
       .filter(t => {
         if (t.type !== 'expense') return false;
         const d = new Date(t.date);
-        return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
       })
       .forEach(t => {
         const cat = t.category || 'Other';
@@ -138,34 +159,65 @@ const Budgets = () => {
     return map;
   }, [transactions, selectedMonth, selectedYear]);
 
-  // Budgets for selected month/year
-  const filteredBudgets = budgets.filter(b => b.month === selectedMonth && b.year === selectedYear);
-
-  const handleSave = (category, limit) => {
-    const existing = budgets.findIndex(b => b.category === category && b.month === selectedMonth && b.year === selectedYear);
-    const updated = [...budgets];
-    if (existing >= 0) {
-      updated[existing] = { ...updated[existing], limit };
-    } else {
-      updated.push({ id: Date.now().toString(), category, limit, month: selectedMonth, year: selectedYear });
+  const handleSave = async (category, limit) => {
+    setSaving(true);
+    try {
+      const { data } = await api.post('/budgets', {
+        category,
+        limit,
+        month: selectedMonth,
+        year: selectedYear,
+      });
+      // setBudget API upserts — refetch to get the latest state
+      setBudgets(prev => {
+        const idx = prev.findIndex(b => b.category === category);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = data;
+          return updated;
+        }
+        return [...prev, data];
+      });
+      setModal(null);
+    } catch (err) {
+      setApiError('Failed to save budget.');
+    } finally {
+      setSaving(false);
     }
-    setBudgets(updated);
-    setModal(null);
   };
 
-  const handleDelete = (id) => {
-    setBudgets(prev => prev.filter(b => b.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/budgets/${id}`);
+      setBudgets(prev => prev.filter(b => b._id !== id));
+    } catch (err) {
+      setApiError('Failed to delete budget.');
+    }
   };
 
-  const totalBudgeted = filteredBudgets.reduce((s, b) => s + b.limit, 0);
-  const totalSpent = filteredBudgets.reduce((s, b) => s + (spendingByCategory[b.category] || 0), 0);
-  const overBudgetCount = filteredBudgets.filter(b => (spendingByCategory[b.category] || 0) > b.limit).length;
+  const totalBudgeted = budgets.reduce((s, b) => s + b.limit, 0);
+  const totalSpent = budgets.reduce((s, b) => s + (spendingByCategory[b.category] || 0), 0);
+  const overBudgetCount = budgets.filter(b => (spendingByCategory[b.category] || 0) > b.limit).length;
 
-  // Categories without a budget set
-  const unbudgetedCategories = CATEGORIES.filter(c => !filteredBudgets.find(b => b.category === c));
+  const unbudgetedCategories = CATEGORIES.filter(c => !budgets.find(b => b.category === c));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="animate-spin w-8 h-8 border-4 border-[#d4ff3f] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {apiError && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-semibold px-5 py-3 rounded-2xl flex items-center justify-between">
+          <span>{apiError}</span>
+          <button onClick={() => setApiError('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -178,7 +230,7 @@ const Budgets = () => {
             onChange={e => setSelectedMonth(Number(e.target.value))}
             className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#d4ff3f] bg-white"
           >
-            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m} {selectedYear}</option>)}
+            {MONTHS.map((m, i) => <option key={m} value={i}>{m} {selectedYear}</option>)}
           </select>
         </div>
       </div>
@@ -188,7 +240,7 @@ const Budgets = () => {
         {[
           { label: 'Total Budgeted', value: `$${totalBudgeted.toLocaleString()}`, icon: '📋', color: 'text-blue-700', bg: 'bg-blue-50' },
           { label: 'Total Spent', value: `$${totalSpent.toLocaleString()}`, icon: '💸', color: 'text-gray-800', bg: 'bg-gray-50' },
-          { label: 'Over Budget', value: `${overBudgetCount} category${overBudgetCount !== 1 ? 'ies' : 'y'}`, icon: '⚠️', color: overBudgetCount > 0 ? 'text-red-600' : 'text-green-600', bg: overBudgetCount > 0 ? 'bg-red-50' : 'bg-green-50' },
+          { label: 'Over Budget', value: `${overBudgetCount} categor${overBudgetCount !== 1 ? 'ies' : 'y'}`, icon: '⚠️', color: overBudgetCount > 0 ? 'text-red-600' : 'text-green-600', bg: overBudgetCount > 0 ? 'bg-red-50' : 'bg-green-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white`}>
             <span className="text-xl">{s.icon}</span>
@@ -199,16 +251,16 @@ const Budgets = () => {
       </div>
 
       {/* Budget cards */}
-      {filteredBudgets.length > 0 && (
+      {budgets.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredBudgets.map(b => (
+          {budgets.map(b => (
             <BudgetCard
-              key={b.id}
+              key={b._id}
               category={b.category}
               limit={b.limit}
               spent={spendingByCategory[b.category] || 0}
               onEdit={() => setModal({ category: b.category, existing: b })}
-              onDelete={() => handleDelete(b.id)}
+              onDelete={() => handleDelete(b._id)}
             />
           ))}
         </div>
@@ -217,10 +269,10 @@ const Budgets = () => {
       {/* Add budgets for remaining categories */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
         <h3 className="text-lg font-extrabold text-gray-900 mb-4">
-          {filteredBudgets.length === 0 ? 'Set Your Budgets' : 'Add More Categories'}
+          {budgets.length === 0 ? 'Set Your Budgets' : 'Add More Categories'}
         </h3>
-        {filteredBudgets.length === 0 && (
-          <p className="text-gray-500 text-sm font-medium mb-4">You haven't set any budgets for {MONTHS[selectedMonth - 1]} {selectedYear} yet. Click a category to get started.</p>
+        {budgets.length === 0 && (
+          <p className="text-gray-500 text-sm font-medium mb-4">You haven't set any budgets for {MONTHS[selectedMonth]} {selectedYear} yet. Click a category to get started.</p>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {unbudgetedCategories.map(cat => (
@@ -247,6 +299,7 @@ const Budgets = () => {
           existing={modal.existing}
           onSave={handleSave}
           onClose={() => setModal(null)}
+          saving={saving}
         />
       )}
     </div>

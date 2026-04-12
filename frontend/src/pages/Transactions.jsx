@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import api from '../utils/api';
 
 /* ── Constants ────────────────────────────────────────────────── */
 const EXPENSE_CATEGORIES = [
@@ -7,12 +8,6 @@ const EXPENSE_CATEGORIES = [
   'Travel', 'Health', 'Shopping', 'Education', 'Utilities', 'Other',
 ];
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Refund', 'Other'];
-
-const STORAGE_KEY = 'finsight_transactions';
-
-const loadTx  = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-const saveTx  = (list) => localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-const newId   = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -38,14 +33,14 @@ const catCls = (cat) => CAT_COLORS[cat] || 'bg-gray-100 text-gray-600';
 
 /* ── Blank form ───────────────────────────────────────────────── */
 const blank = () => ({
-  id: '', type: 'expense', description: '', amount: '',
+  _id: '', type: 'expense', description: '', amount: '',
   category: 'Other', date: new Date().toISOString().slice(0, 10), note: '',
 });
 
 /* ─────────────────────────────────────────────────────────────── */
 /* Modal                                                           */
 /* ─────────────────────────────────────────────────────────────── */
-const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
+const Modal = ({ form, setForm, onSave, onClose, isEdit, saving }) => {
   const cats = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const handleChange = (e) => {
@@ -53,14 +48,13 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
     setForm((f) => ({
       ...f,
       [name]: value,
-      // reset category when type changes
       ...(name === 'type' ? { category: 'Other' } : {}),
     }));
   };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-up">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-gray-100">
           <h3 className="text-lg font-black text-gray-900">
@@ -92,7 +86,6 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
             ))}
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">Description *</label>
             <input name="description" required value={form.description} onChange={handleChange}
@@ -100,7 +93,6 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#d4ff3f]" />
           </div>
 
-          {/* Amount + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-gray-600 mb-1.5">Amount ($) *</label>
@@ -115,7 +107,6 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
             </div>
           </div>
 
-          {/* Category */}
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">Category</label>
             <select name="category" value={form.category} onChange={handleChange}
@@ -124,7 +115,6 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
             </select>
           </div>
 
-          {/* Note */}
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">Note (optional)</label>
             <input name="note" value={form.note} onChange={handleChange}
@@ -132,11 +122,10 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#d4ff3f]" />
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button type="submit"
-              className="flex-1 bg-black text-white font-bold text-sm py-3.5 rounded-full hover:bg-gray-800 transition-colors">
-              {isEdit ? 'Save Changes' : 'Add Transaction'}
+            <button type="submit" disabled={saving}
+              className="flex-1 bg-black text-white font-bold text-sm py-3.5 rounded-full hover:bg-gray-800 transition-colors disabled:opacity-60">
+              {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Transaction'}
             </button>
             <button type="button" onClick={onClose}
               className="px-5 bg-gray-100 text-black font-bold text-sm py-3.5 rounded-full hover:bg-gray-200 transition-colors">
@@ -153,21 +142,40 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit }) => {
 /* Main Transactions page                                          */
 /* ─────────────────────────────────────────────────────────────── */
 const Transactions = () => {
-  const [transactions, setTransactions] = useState(loadTx);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [saving, setSaving]             = useState(false);
   const [modalOpen, setModalOpen]       = useState(false);
   const [form, setForm]                 = useState(blank());
   const [isEdit, setIsEdit]             = useState(false);
   const [search, setSearch]             = useState('');
-  const [filterType, setFilterType]     = useState('all');   // all | income | expense
+  const [filterType, setFilterType]     = useState('all');
   const [filterCat, setFilterCat]       = useState('all');
-  const [sortBy, setSortBy]             = useState('date');  // date | amount
+  const [sortBy, setSortBy]             = useState('date');
   const [sortDir, setSortDir]           = useState('desc');
   const [csvError, setCsvError]         = useState('');
-  const [deleteId, setDeleteId]         = useState(null);    // confirm delete
+  const [deleteId, setDeleteId]         = useState(null);
+  const [apiError, setApiError]         = useState('');
   const fileRef = useRef(null);
   const location = useLocation();
 
-  /* Auto-trigger from Dashboard empty-state buttons or global search */
+  /* Fetch all transactions from backend */
+  const fetchTransactions = useCallback(async () => {
+    try {
+      const { data } = await api.get('/transactions');
+      setTransactions(data);
+    } catch (err) {
+      setApiError('Failed to load transactions.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  /* Auto-trigger from navigation state */
   useEffect(() => {
     if (location.state?.openAdd) {
       setForm(blank()); setIsEdit(false); setModalOpen(true);
@@ -179,91 +187,75 @@ const Transactions = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Persist whenever list changes */
-  const persist = useCallback((list) => {
-    setTransactions(list);
-    saveTx(list);
-  }, []);
-
   /* Open add modal */
   const openAdd = () => { setForm(blank()); setIsEdit(false); setModalOpen(true); };
 
   /* Open edit modal */
   const openEdit = (tx) => {
-    setForm({ ...tx, date: tx.date?.slice(0, 10) || new Date().toISOString().slice(0, 10) });
+    setForm({
+      _id: tx._id,
+      type: tx.type,
+      description: tx.description,
+      amount: tx.amount,
+      category: tx.category,
+      date: tx.date?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+      note: tx.notes || '',
+    });
     setIsEdit(true);
     setModalOpen(true);
   };
 
   /* Save (add or edit) */
-  const handleSave = () => {
+  const handleSave = async () => {
     const amount = parseFloat(form.amount);
     if (!form.description.trim() || isNaN(amount) || amount <= 0) return;
-    if (isEdit) {
-      persist(transactions.map((t) => (t.id === form.id ? { ...form, amount } : t)));
-    } else {
-      persist([{ ...form, amount, id: newId(), createdAt: new Date().toISOString() }, ...transactions]);
+    setSaving(true);
+    try {
+      if (isEdit) {
+        const { data } = await api.put(`/transactions/${form._id}`, {
+          amount,
+          type: form.type,
+          category: form.category,
+          description: form.description,
+          date: form.date,
+          notes: form.note,
+        });
+        setTransactions((prev) => prev.map((t) => t._id === data._id ? data : t));
+      } else {
+        const { data } = await api.post('/transactions', {
+          amount,
+          type: form.type,
+          category: form.category,
+          description: form.description,
+          date: form.date,
+          notes: form.note,
+        });
+        setTransactions((prev) => [data, ...prev]);
+      }
+      setModalOpen(false);
+    } catch (err) {
+      setApiError('Failed to save transaction.');
+    } finally {
+      setSaving(false);
     }
-    setModalOpen(false);
   };
 
   /* Delete */
-  const handleDelete = (id) => {
-    persist(transactions.filter((t) => t.id !== id));
-    setDeleteId(null);
-  };
-
-  /* CSV upload */
-  const handleCSV = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setCsvError('');
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const lines = ev.target.result.split('\n').filter(Boolean);
-        const header = lines[0].toLowerCase().split(',').map((h) => h.trim().replace(/"/g, ''));
-        const idx = {
-          desc:   header.findIndex((h) => ['description', 'desc', 'name', 'merchant'].includes(h)),
-          amount: header.findIndex((h) => ['amount', 'value', 'price'].includes(h)),
-          date:   header.findIndex((h) => ['date', 'time', 'date/time'].includes(h)),
-          type:   header.findIndex((h) => ['type', 'transaction type'].includes(h)),
-          cat:    header.findIndex((h) => ['category', 'cat'].includes(h)),
-        };
-        if (idx.desc < 0 || idx.amount < 0) {
-          setCsvError('CSV must have at least "description" and "amount" columns.');
-          return;
-        }
-        const imported = lines.slice(1).map((line) => {
-          const cols = line.split(',').map((c) => c.trim().replace(/"/g, ''));
-          const amount = Math.abs(parseFloat(cols[idx.amount]));
-          const rawType = idx.type >= 0 ? cols[idx.type].toLowerCase() : '';
-          const type = rawType.includes('income') || rawType.includes('credit') ? 'income' : 'expense';
-          return {
-            id: newId(),
-            description: idx.desc >= 0 ? cols[idx.desc] : 'Imported',
-            amount: isNaN(amount) ? 0 : amount,
-            type,
-            category: idx.cat >= 0 ? cols[idx.cat] : 'Other',
-            date: idx.date >= 0 ? cols[idx.date] : new Date().toISOString().slice(0, 10),
-            note: 'Imported from CSV',
-            createdAt: new Date().toISOString(),
-          };
-        }).filter((t) => t.amount > 0);
-        persist([...imported, ...transactions]);
-        fileRef.current.value = '';
-      } catch {
-        setCsvError('Failed to parse CSV. Please check the file format.');
-      }
-    };
-    reader.readAsText(file);
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/transactions/${id}`);
+      setTransactions((prev) => prev.filter((t) => t._id !== id));
+      setDeleteId(null);
+    } catch (err) {
+      setApiError('Failed to delete transaction.');
+    }
   };
 
   /* CSV export */
   const handleExport = () => {
-    const rows = [['Date', 'Description', 'Type', 'Category', 'Amount', 'Note']];
+    const rows = [['Date', 'Description', 'Type', 'Category', 'Amount', 'Notes']];
     filtered.forEach((t) => {
-      rows.push([t.date, t.description, t.type, t.category, t.amount, t.note || '']);
+      rows.push([t.date?.slice(0, 10), t.description, t.type, t.category, t.amount, t.notes || '']);
     });
     const csv = rows.map((r) => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -280,8 +272,8 @@ const Transactions = () => {
     .filter((t) => {
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (filterCat !== 'all' && t.category !== filterCat) return false;
-      if (search && !t.description.toLowerCase().includes(search.toLowerCase()) &&
-          !t.category.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !t.description?.toLowerCase().includes(search.toLowerCase()) &&
+          !t.category?.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     })
     .sort((a, b) => {
@@ -307,8 +299,24 @@ const Transactions = () => {
     </svg>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="animate-spin w-8 h-8 border-4 border-[#d4ff3f] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+      {/* API error */}
+      {apiError && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm font-semibold px-5 py-3 rounded-2xl flex items-center justify-between">
+          <span>{apiError}</span>
+          <button onClick={() => setApiError('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+        </div>
+      )}
+
       {/* ── Summary cards ── */}
       <div className="grid grid-cols-3 gap-4">
         {[
@@ -322,9 +330,7 @@ const Transactions = () => {
               <span className="text-[9px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{s.badge}</span>
             </div>
             <p className={`text-2xl font-black ${s.color}`}>{fmt(s.val)}</p>
-            <p className="text-xs text-gray-400 font-medium mt-1">
-              {transactions.filter((t) => t.type === (s.badge === 'INCOME' ? 'income' : s.badge === 'EXPENSE' ? 'expense' : null) || s.badge === 'NET').length} transactions
-            </p>
+            <p className="text-xs text-gray-400 font-medium mt-1">{transactions.length} transactions</p>
           </div>
         ))}
       </div>
@@ -361,18 +367,8 @@ const Transactions = () => {
 
         {/* Actions */}
         <div className="flex gap-2 flex-wrap">
-          {/* CSV Upload */}
-          <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleCSV} />
-          <button onClick={() => fileRef.current?.click()}
-            className="flex items-center gap-2 bg-gray-100 text-black font-bold text-sm px-4 py-2.5 rounded-full hover:bg-gray-200 transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            Import
-          </button>
+          <input ref={fileRef} type="file" accept=".csv" className="hidden" />
 
-          {/* CSV Export */}
           {transactions.length > 0 && (
             <button onClick={handleExport}
               className="flex items-center gap-2 bg-gray-100 text-black font-bold text-sm px-4 py-2.5 rounded-full hover:bg-gray-200 transition-colors">
@@ -384,7 +380,6 @@ const Transactions = () => {
             </button>
           )}
 
-          {/* Add */}
           <button onClick={openAdd}
             className="flex items-center gap-2 bg-black text-white font-bold text-sm px-5 py-2.5 rounded-full hover:bg-gray-800 transition-colors">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -415,7 +410,7 @@ const Transactions = () => {
             <p className="text-sm font-black text-gray-600">{transactions.length === 0 ? 'No transactions yet' : 'No results found'}</p>
             <p className="text-xs text-gray-400 font-medium mt-1 max-w-xs">
               {transactions.length === 0
-                ? 'Click "Add" to record your first transaction, or import a CSV file.'
+                ? 'Click "Add" to record your first transaction.'
                 : 'Try changing the search or filter settings.'}
             </p>
             {transactions.length === 0 && (
@@ -443,7 +438,7 @@ const Transactions = () => {
             {/* Rows */}
             <div className="divide-y divide-gray-50">
               {filtered.map((tx) => (
-                <div key={tx.id}
+                <div key={tx._id}
                   className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-4 items-center hover:bg-gray-50/60 transition-colors group">
                   {/* Description */}
                   <div className="flex items-center gap-3 min-w-0">
@@ -454,7 +449,7 @@ const Transactions = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-gray-900 truncate">{tx.description}</p>
-                      {tx.note && <p className="text-xs text-gray-400 font-medium truncate">{tx.note}</p>}
+                      {tx.notes && <p className="text-xs text-gray-400 font-medium truncate">{tx.notes}</p>}
                     </div>
                   </div>
 
@@ -481,7 +476,7 @@ const Transactions = () => {
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" />
                       </svg>
                     </button>
-                    <button onClick={() => setDeleteId(tx.id)}
+                    <button onClick={() => setDeleteId(tx._id)}
                       className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center transition-colors"
                       title="Delete">
                       <svg className="w-3.5 h-3.5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -515,14 +510,14 @@ const Transactions = () => {
         <Modal
           form={form} setForm={setForm}
           onSave={handleSave} onClose={() => setModalOpen(false)}
-          isEdit={isEdit}
+          isEdit={isEdit} saving={saving}
         />
       )}
 
       {/* ── Delete confirm ── */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center animate-fade-up">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
             <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
               <svg className="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" />

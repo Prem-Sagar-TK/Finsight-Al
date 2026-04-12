@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import api from '../utils/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -69,7 +70,29 @@ const InsightCard = ({ icon, title, text, accent }) => (
 
 /* ════════════════════════════════════════════════════════════════════ */
 const Insights = () => {
-  const storedTx = useMemo(() => JSON.parse(localStorage.getItem('finsight_transactions') || '[]'), []);
+  const [transactions, setTransactions] = useState([]);
+  const [insightsData, setInsightsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [txRes, insRes] = await Promise.all([
+          api.get('/transactions'),
+          api.get('/insights'),
+        ]);
+        setTransactions(txRes.data);
+        setInsightsData(insRes.data);
+      } catch (err) {
+        console.error('Insights fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const storedTx = transactions;
   const hasData = storedTx.length > 0;
 
   const totalIncome  = storedTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
@@ -101,15 +124,16 @@ const Insights = () => {
   });
   const trendData = sortedMonths.map(k => monthlyMap[k]);
 
-  // Health score
-  let healthScore = 50;
-  if (totalIncome > 0) {
-    const rate = (totalIncome - totalExpense) / totalIncome;
-    healthScore += rate > 0 ? Math.min(rate * 100, 50) : Math.max(rate * 50, -50);
-  } else if (totalExpense > 0) {
-    healthScore = 10;
+  // Health score from API or fallback
+  let healthScore = insightsData?.healthScore ?? 50;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="animate-spin w-8 h-8 border-4 border-[#d4ff3f] border-t-transparent rounded-full" />
+      </div>
+    );
   }
-  healthScore = Math.max(0, Math.min(100, Math.round(healthScore)));
 
   // AI insights
   const insights = [];
