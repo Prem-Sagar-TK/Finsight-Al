@@ -177,8 +177,9 @@ const DashboardLayout = () => {
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="bg-[#d4ff3f] rounded-lg p-1.5">
-                  <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg className="w-5 h-5 text-black" viewBox="0 0 100 100" fill="none">
+                    <path d="M30 75V25H75V40H48V50H65V65H48V75H30Z" fill="currentColor"/>
+                    <circle cx="75" cy="75" r="10" fill="currentColor"/>
                   </svg>
                 </div>
                 <span className="text-lg font-extrabold tracking-tight">FinSight AI</span>
@@ -241,8 +242,9 @@ const DashboardLayout = () => {
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-2.5">
             <div className="bg-[#d4ff3f] rounded-lg p-1.5">
-              <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" strokeLinecap="round" strokeLinejoin="round" />
+              <svg className="w-5 h-5 text-black" viewBox="0 0 100 100" fill="none">
+                <path d="M30 75V25H75V40H48V50H65V65H48V75H30Z" fill="currentColor"/>
+                <circle cx="75" cy="75" r="10" fill="currentColor"/>
               </svg>
             </div>
             <span className="text-lg font-extrabold tracking-tight">FinSight AI</span>
