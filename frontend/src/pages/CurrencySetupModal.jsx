@@ -8,7 +8,7 @@ const FLAG_MAP = {
 };
 
 const CurrencySetupModal = () => {
-  const { selectCurrency, completeSetup } = useCurrency();
+  const { selectCurrency, completeSetup, setupDone } = useCurrency();
   const [selected, setSelected] = useState('USD');
   const [search, setSearch] = useState('');
 
@@ -21,6 +21,9 @@ const CurrencySetupModal = () => {
 
   const handleConfirm = () => selectCurrency(selected);
   const handleSkip    = () => completeSetup();
+
+  // Don't render if currency already chosen
+  if (setupDone) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">

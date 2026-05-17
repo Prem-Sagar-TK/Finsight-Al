@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { CurrencyProvider, useCurrency } from './context/CurrencyContext';
-import CurrencySetupModal from './pages/CurrencySetupModal';
+import { CurrencyProvider } from './context/CurrencyContext';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,23 +24,10 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Shows the currency picker modal the very first time a user logs in
-const CurrencyGate = ({ children }) => {
-  const { currentUser } = useAuth();
-  const { setupDone } = useCurrency();
-
-  return (
-    <>
-      {children}
-      {currentUser && !setupDone && <CurrencySetupModal />}
-    </>
-  );
-};
 
 function AppRoutes() {
   return (
     <div className="font-sans text-gray-900 bg-[#eef0f4] min-h-screen">
-      <CurrencyGate>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
@@ -66,7 +52,6 @@ function AppRoutes() {
             <Route path="billing" element={<Billing />} />
           </Route>
         </Routes>
-      </CurrencyGate>
     </div>
   );
 }

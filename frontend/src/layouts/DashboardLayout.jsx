@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 import AiChat from '../pages/AiChat';
+import CurrencySetupModal from '../pages/CurrencySetupModal';
 
 /* ── Close dropdown on outside click ─────────────────────────── */
 function useOutsideClick(ref, callback) {
@@ -532,6 +534,9 @@ const DashboardLayout = () => {
 
       {/* AI Chat floating widget — available on all dashboard pages */}
       <AiChat />
+
+      {/* Currency setup modal — shown once after first login */}
+      <CurrencySetupModal />
     </div>
   );
 };
