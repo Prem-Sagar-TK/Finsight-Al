@@ -26,25 +26,32 @@ const CurrencyContext = createContext();
 
 /* ── Smart formatter ──────────────────────────────────────────────── */
 /**
- * Formats a number with the user's preferred currency.
- * If the absolute value has more than 6 digits (>= 1,000,000),
- * it abbreviates: K / M / B / T so numbers never overflow their boxes.
+ * Abbreviates large currency values so they never overflow their boxes.
+ *   >= 1e18 → Qi (Quintillion)   e.g. ₹1.23Qi
+ *   >= 1e15 → Qd (Quadrillion)   e.g. ₹4.56Qd
+ *   >= 1e12 → T  (Trillion)      e.g. ₹7.89T
+ *   >= 1e9  → B  (Billion)       e.g. ₹1.23B
+ *   >= 1e6  → M  (Million)       e.g. ₹4.56M
+ *   >= 1e3  → K  (Thousand)      e.g. ₹789K
+ *   < 1e3   → full Intl format
  */
 export function smartFormat(amount, currencyCode = 'USD', locale = 'en-US') {
-  const abs = Math.abs(amount);
+  const abs  = Math.abs(amount);
   const sign = amount < 0 ? '-' : '';
-  const sym = CURRENCIES.find(c => c.code === currencyCode)?.symbol ?? '$';
+  const sym  = CURRENCIES.find(c => c.code === currencyCode)?.symbol ?? '$';
 
-  if (abs >= 1_000_000_000_000) {
-    return `${sign}${sym}${(abs / 1_000_000_000_000).toFixed(2)}T`;
-  }
-  if (abs >= 1_000_000_000) {
-    return `${sign}${sym}${(abs / 1_000_000_000).toFixed(2)}B`;
-  }
-  if (abs >= 1_000_000) {
-    return `${sign}${sym}${(abs / 1_000_000).toFixed(2)}M`;
-  }
-  // Under 1 million — use full Intl format
+  const abbr = (val, suffix) => {
+    const dp = val >= 100 ? 0 : val >= 10 ? 1 : 2;
+    return `${sign}${sym}${val.toFixed(dp)}${suffix}`;
+  };
+
+  if (abs >= 1e18) return abbr(abs / 1e18, 'Qi');
+  if (abs >= 1e15) return abbr(abs / 1e15, 'Qd');
+  if (abs >= 1e12) return abbr(abs / 1e12, 'T');
+  if (abs >= 1e9)  return abbr(abs / 1e9,  'B');
+  if (abs >= 1e6)  return abbr(abs / 1e6,  'M');
+  if (abs >= 1e3)  return abbr(abs / 1e3,  'K');
+
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -55,6 +62,7 @@ export function smartFormat(amount, currencyCode = 'USD', locale = 'en-US') {
     return `${sign}${sym}${abs.toLocaleString(locale, { maximumFractionDigits: 2 })}`;
   }
 }
+
 
 /* ── Provider ──────────────────────────────────────────────────────── */
 export const CurrencyProvider = ({ children }) => {
