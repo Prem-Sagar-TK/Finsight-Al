@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CurrencyProvider, useCurrency } from './context/CurrencyContext';
+import CurrencySetupModal from './pages/CurrencySetupModal';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -23,33 +25,48 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Shows the currency picker modal the very first time a user logs in
+const CurrencyGate = ({ children }) => {
+  const { currentUser } = useAuth();
+  const { setupDone } = useCurrency();
+
+  return (
+    <>
+      {children}
+      {currentUser && !setupDone && <CurrencySetupModal />}
+    </>
+  );
+};
+
 function AppRoutes() {
   return (
     <div className="font-sans text-gray-900 bg-[#eef0f4] min-h-screen">
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      <CurrencyGate>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="insights" element={<Insights />} />
-          <Route path="budgets" element={<Budgets />} />
-          <Route path="subscriptions" element={<Subscriptions />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="billing" element={<Billing />} />
-        </Route>
-      </Routes>
+          {/* Protected Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="transactions" element={<Transactions />} />
+            <Route path="insights" element={<Insights />} />
+            <Route path="budgets" element={<Budgets />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="billing" element={<Billing />} />
+          </Route>
+        </Routes>
+      </CurrencyGate>
     </div>
   );
 }
@@ -58,9 +75,11 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <CurrencyProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

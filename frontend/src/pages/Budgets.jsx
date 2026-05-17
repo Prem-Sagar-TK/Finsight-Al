@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import api from '../utils/api';
+import { useCurrency } from '../context/CurrencyContext';
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 'Education', 'Utilities', 'Other'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -10,7 +11,7 @@ const CURRENT_MONTH = now.getMonth(); // 0-indexed to match backend
 const CURRENT_YEAR  = now.getFullYear();
 
 /* ── Budget Modal ──────────────────────────────────────────────────── */
-const BudgetModal = ({ existing, category, onSave, onClose, saving }) => {
+const BudgetModal = ({ existing, category, onSave, onClose, saving, currencySymbol }) => {
   const [limit, setLimit] = useState(existing ? String(existing.limit) : '');
 
   const handleSave = () => {
@@ -31,7 +32,7 @@ const BudgetModal = ({ existing, category, onSave, onClose, saving }) => {
           </button>
         </div>
         <div>
-          <label className="text-sm font-semibold text-gray-700 block mb-2">Monthly Limit ($)</label>
+          <label className="text-sm font-semibold text-gray-700 block mb-2">Monthly Limit ({currencySymbol})</label>
           <input
             type="number" min="1" value={limit} onChange={e => setLimit(e.target.value)}
             placeholder="e.g. 500"
@@ -51,7 +52,7 @@ const BudgetModal = ({ existing, category, onSave, onClose, saving }) => {
 };
 
 /* ── Budget Card ───────────────────────────────────────────────────── */
-const BudgetCard = ({ category, limit, spent, onEdit, onDelete }) => {
+const BudgetCard = ({ category, limit, spent, onEdit, onDelete, fmt }) => {
   const pct = limit > 0 ? Math.round((spent / limit) * 100) : 0;
   const over = spent > limit;
   const near = !over && pct >= 80;
@@ -97,7 +98,7 @@ const BudgetCard = ({ category, limit, spent, onEdit, onDelete }) => {
       <div className="flex justify-between text-sm">
         <div>
           <p className="text-gray-400 font-medium text-xs">Spent</p>
-          <p className="font-extrabold text-gray-900">${spent.toLocaleString()}</p>
+          <p className="font-extrabold text-gray-900">{fmt(spent)}</p>
         </div>
         <div className="text-center">
           <p className="text-gray-400 font-medium text-xs">Used</p>
@@ -106,7 +107,7 @@ const BudgetCard = ({ category, limit, spent, onEdit, onDelete }) => {
         <div className="text-right">
           <p className="text-gray-400 font-medium text-xs">{over ? 'Overspent' : 'Remaining'}</p>
           <p className={`font-extrabold ${over ? 'text-red-500' : 'text-gray-900'}`}>
-            ${Math.abs(remaining).toLocaleString()}
+            {fmt(Math.abs(remaining))}
           </p>
         </div>
       </div>
@@ -116,6 +117,7 @@ const BudgetCard = ({ category, limit, spent, onEdit, onDelete }) => {
 
 /* ════════════════════════════════════════════════════════════════════ */
 const Budgets = () => {
+  const { fmt, currency } = useCurrency();
   const [selectedMonth, setSelectedMonth] = useState(CURRENT_MONTH);
   const [selectedYear]  = useState(CURRENT_YEAR);
   const [budgets, setBudgets]   = useState([]);
@@ -238,8 +240,8 @@ const Budgets = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Budgeted', value: `$${totalBudgeted.toLocaleString()}`, icon: '📋', color: 'text-blue-700', bg: 'bg-blue-50' },
-          { label: 'Total Spent', value: `$${totalSpent.toLocaleString()}`, icon: '💸', color: 'text-gray-800', bg: 'bg-gray-50' },
+          { label: 'Total Budgeted', value: fmt(totalBudgeted), icon: '📋', color: 'text-blue-700', bg: 'bg-blue-50' },
+          { label: 'Total Spent', value: fmt(totalSpent), icon: '💸', color: 'text-gray-800', bg: 'bg-gray-50' },
           { label: 'Over Budget', value: `${overBudgetCount} categor${overBudgetCount !== 1 ? 'ies' : 'y'}`, icon: '⚠️', color: overBudgetCount > 0 ? 'text-red-600' : 'text-green-600', bg: overBudgetCount > 0 ? 'bg-red-50' : 'bg-green-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white`}>
@@ -261,6 +263,7 @@ const Budgets = () => {
               spent={spendingByCategory[b.category] || 0}
               onEdit={() => setModal({ category: b.category, existing: b })}
               onDelete={() => handleDelete(b._id)}
+              fmt={fmt}
             />
           ))}
         </div>
@@ -300,6 +303,7 @@ const Budgets = () => {
           onSave={handleSave}
           onClose={() => setModal(null)}
           saving={saving}
+          currencySymbol={currency.symbol}
         />
       )}
     </div>

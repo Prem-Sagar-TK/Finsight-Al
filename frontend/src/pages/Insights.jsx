@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import api from '../utils/api';
+import { useCurrency } from '../context/CurrencyContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -73,6 +74,7 @@ const Insights = () => {
   const [transactions, setTransactions] = useState([]);
   const [insightsData, setInsightsData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { fmt } = useCurrency();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -146,9 +148,9 @@ const Insights = () => {
     if (categories.length > 0) {
       const top = categories[0];
       const pct = totalExpense > 0 ? Math.round((top.amount / totalExpense) * 100) : 0;
-      insights.push({ icon: '🎯', title: `Top Spend: ${top.category}`, text: `${top.category} accounts for ${pct}% of your total expenses ($${top.amount.toLocaleString()}).`, accent: 'bg-blue-50 border-blue-200' });
+      insights.push({ icon: '🎯', title: `Top Spend: ${top.category}`, text: `${top.category} accounts for ${pct}% of your total expenses (${fmt(top.amount)}).`, accent: 'bg-blue-50 border-blue-200' });
     }
-    if (balance > 0) insights.push({ icon: '✅', title: 'Positive Balance', text: `You have a net positive balance of $${balance.toLocaleString()}. Keep it up!`, accent: 'bg-green-50 border-green-200' });
+    if (balance > 0) insights.push({ icon: '✅', title: 'Positive Balance', text: `You have a net positive balance of ${fmt(balance)}. Keep it up!`, accent: 'bg-green-50 border-green-200' });
     if (categories.length >= 3) {
       insights.push({ icon: '📉', title: 'Spending Tip', text: `Try reducing ${categories[categories.length - 1].category} (your smallest category) to find easy savings.`, accent: 'bg-purple-50 border-purple-200' });
     }
@@ -215,9 +217,9 @@ const Insights = () => {
         {/* Key metrics */}
         <div className="lg:col-span-2 grid grid-cols-2 gap-4">
           {[
-            { label: 'Total Income', value: `$${totalIncome.toLocaleString()}`, sub: 'All time', bg: 'bg-green-50', text: 'text-green-700', icon: '📈' },
-            { label: 'Total Expenses', value: `$${totalExpense.toLocaleString()}`, sub: 'All time', bg: 'bg-red-50', text: 'text-red-600', icon: '📉' },
-            { label: 'Net Balance', value: `$${balance.toLocaleString()}`, sub: balance >= 0 ? 'Positive ✓' : 'Negative ✗', bg: balance >= 0 ? 'bg-blue-50' : 'bg-red-50', text: balance >= 0 ? 'text-blue-700' : 'text-red-600', icon: '💰' },
+            { label: 'Total Income', value: fmt(totalIncome), sub: 'All time', bg: 'bg-green-50', text: 'text-green-700', icon: '📈' },
+            { label: 'Total Expenses', value: fmt(totalExpense), sub: 'All time', bg: 'bg-red-50', text: 'text-red-600', icon: '📉' },
+            { label: 'Net Balance', value: fmt(balance), sub: balance >= 0 ? 'Positive ✓' : 'Negative ✗', bg: balance >= 0 ? 'bg-blue-50' : 'bg-red-50', text: balance >= 0 ? 'text-blue-700' : 'text-red-600', icon: '💰' },
             { label: 'Savings Rate', value: `${Math.max(0, savingsRate.toFixed(1))}%`, sub: savingsRate >= 20 ? 'Above target ✓' : 'Below 20% target', bg: 'bg-yellow-50', text: 'text-yellow-700', icon: '🎯' },
           ].map(m => (
             <div key={m.label} className={`${m.bg} rounded-2xl p-5 flex flex-col justify-between border border-white`}>
@@ -295,7 +297,7 @@ const Insights = () => {
                       <div className="w-3 h-3 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                       <span className="text-gray-800">{item.category}</span>
                     </div>
-                    <span className="text-gray-500">${item.amount.toLocaleString()} <span className="text-gray-400 text-xs">({pct}%)</span></span>
+                    <span className="text-gray-500">{fmt(item.amount)} <span className="text-gray-400 text-xs">({pct}%)</span></span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: COLORS[i % COLORS.length] }} />

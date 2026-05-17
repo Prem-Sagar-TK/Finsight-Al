@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../utils/api';
+import { useCurrency } from '../context/CurrencyContext';
 
 /* ── Constants ────────────────────────────────────────────────── */
 const EXPENSE_CATEGORIES = [
@@ -9,7 +10,6 @@ const EXPENSE_CATEGORIES = [
 ];
 const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Gift', 'Refund', 'Other'];
 
-const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /* ── Category badge ───────────────────────────────────────────── */
@@ -41,6 +41,7 @@ const blank = () => ({
 /* Modal                                                           */
 /* ─────────────────────────────────────────────────────────────── */
 const Modal = ({ form, setForm, onSave, onClose, isEdit, saving }) => {
+  const { currency } = useCurrency();
   const cats = form.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const handleChange = (e) => {
@@ -95,7 +96,7 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit, saving }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1.5">Amount ($) *</label>
+              <label className="block text-xs font-bold text-gray-600 mb-1.5">Amount ({currency.symbol}) *</label>
               <input name="amount" type="number" min="0.01" step="0.01" required
                 value={form.amount} onChange={handleChange} placeholder="0.00"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#d4ff3f]" />
@@ -142,6 +143,7 @@ const Modal = ({ form, setForm, onSave, onClose, isEdit, saving }) => {
 /* Main Transactions page                                          */
 /* ─────────────────────────────────────────────────────────────── */
 const Transactions = () => {
+  const { fmt, currency } = useCurrency();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [saving, setSaving]             = useState(false);

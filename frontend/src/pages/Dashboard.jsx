@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { useCurrency } from '../context/CurrencyContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -63,6 +64,7 @@ const EmptyState = () => {
 /* ════════════════════════════════════════════════════════════════ */
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const { fmt } = useCurrency();
   const [transactions, setTransactions] = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -159,19 +161,19 @@ const Dashboard = () => {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
-          label="Current Balance" value={`$${balance.toLocaleString()}`}
+          label="Current Balance" value={fmt(balance)}
           badge="Total" badgeClass="bg-gray-100 text-gray-600"
           iconBg="bg-gray-100"
           icon={<svg className="w-6 h-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>}
         />
         <StatCard
-          label="Total Income" value={`$${totalIncome.toLocaleString()}`}
+          label="Total Income" value={fmt(totalIncome)}
           badge="Income" badgeClass="bg-green-100 text-green-700"
           iconBg="bg-green-50"
           icon={<svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18" /><polyline points="17,6 23,6 23,12" /></svg>}
         />
         <StatCard
-          label="Total Expenses" value={`$${totalExpense.toLocaleString()}`}
+          label="Total Expenses" value={fmt(totalExpense)}
           badge="Expense" badgeClass="bg-red-100 text-red-600"
           iconBg="bg-red-50"
           icon={<svg className="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,18 13.5,8.5 8.5,13.5 1,6" /><polyline points="17,18 23,18 23,12" /></svg>}
@@ -259,7 +261,7 @@ const Dashboard = () => {
                       <div className="flex justify-between text-sm font-bold mb-1.5">
                         <span className="text-gray-700">{item.category}</span>
                         <span className="text-gray-500">
-                          ${item.amount.toLocaleString()} <span className="text-gray-400 font-semibold text-xs">({pct}%)</span>
+                          {fmt(item.amount)} <span className="text-gray-400 font-semibold text-xs">({pct}%)</span>
                         </span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
