@@ -46,7 +46,7 @@ const LandingPage = () => (
 
         {/* Links */}
         <div className="hidden md:flex items-center gap-1">
-          {['Personal', 'Business', 'Insights', 'Pricing'].map((l) => (
+          {['Personal', 'Business', 'Insights'].map((l) => (
             <a key={l} href="#"
               className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-black rounded-xl hover:bg-gray-100 transition-all">
               {l}
@@ -478,59 +478,6 @@ const LandingPage = () => (
       </div>
     </section>
 
-    {/* ══ PRICING ══════════════════════════════════════════════════ */}
-    <section className="py-24 border-b border-gray-100">
-      <div className="max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">Simple, honest pricing</h2>
-        <p className="text-gray-500 text-lg mb-12">No surprises. Cancel any time.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          {/* Free */}
-          <div className="rounded-3xl border border-gray-200 p-8 hover:shadow-lg transition-shadow">
-            <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Free Forever</p>
-            <p className="text-5xl font-black mb-1">$0 <span className="text-gray-400 text-lg font-semibold">/ mo</span></p>
-            <p className="text-gray-500 text-sm font-medium mb-6">Perfect for getting started</p>
-            <ul className="space-y-3 mb-8">
-              {['AI spending analysis', 'Up to 100 transactions/mo', 'Budget planner (3 categories)', 'Financial health score'].map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm font-semibold text-gray-700">
-                  <span className="w-5 h-5 bg-black rounded-full flex items-center justify-center shrink-0">
-                    <Svg d={CHECK} size={10} className="text-[#9fe870]" />
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link to="/register"
-              className="w-full block text-center bg-gray-100 text-black font-bold py-3 rounded-full hover:bg-gray-200 transition-colors text-sm">
-              Get started free
-            </Link>
-          </div>
-
-          {/* Pro */}
-          <div className="rounded-3xl border-2 border-black bg-black p-8 hover:shadow-2xl transition-shadow relative overflow-hidden">
-            <div className="absolute top-5 right-5 bg-[#9fe870] text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-              Popular
-            </div>
-            <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Pro</p>
-            <p className="text-5xl font-black text-white mb-1">$5 <span className="text-gray-500 text-lg font-semibold">/ mo</span></p>
-            <p className="text-gray-400 text-sm font-medium mb-6">For power users &amp; goal-setters</p>
-            <ul className="space-y-3 mb-8">
-              {['Everything in Free', 'Unlimited transactions', 'Unlimited budget categories', 'AI chat assistant', 'CSV import & export', 'Priority support'].map((f) => (
-                <li key={f} className="flex items-center gap-3 text-sm font-semibold text-gray-300">
-                  <span className="w-5 h-5 bg-[#9fe870] rounded-full flex items-center justify-center shrink-0">
-                    <Svg d={CHECK} size={10} className="text-black" />
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Link to="/register"
-              className="w-full block text-center bg-[#9fe870] text-black font-bold py-3 rounded-full hover:bg-[#8fda60] transition-colors text-sm">
-              Start Pro free trial
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
 
     {/* ══ FINAL CTA ════════════════════════════════════════════════ */}
     <section className="hero-mesh py-28 text-center relative overflow-hidden">
@@ -578,7 +525,7 @@ const LandingPage = () => (
             </p>
           </div>
           {[
-            { title: 'Product',  links: ['Features', 'Pricing', 'Changelog', 'Roadmap'] },
+            { title: 'Product',  links: ['Features', 'Changelog', 'Roadmap'] },
             { title: 'Company',  links: ['About', 'Blog', 'Careers', 'Press'] },
             { title: 'Legal',    links: ['Privacy', 'Terms', 'Security', 'Cookies'] },
           ].map((col) => (

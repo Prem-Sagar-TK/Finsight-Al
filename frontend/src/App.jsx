@@ -11,11 +11,9 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Insights from './pages/Insights';
 import Budgets from './pages/Budgets';
-import Subscriptions from './pages/Subscriptions';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Billing from './pages/Billing';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -45,11 +43,9 @@ function AppRoutes() {
             <Route path="transactions" element={<Transactions />} />
             <Route path="insights" element={<Insights />} />
             <Route path="budgets" element={<Budgets />} />
-            <Route path="subscriptions" element={<Subscriptions />} />
             <Route path="reports" element={<Reports />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="billing" element={<Billing />} />
           </Route>
         </Routes>
     </div>
