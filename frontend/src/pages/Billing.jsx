@@ -31,18 +31,16 @@ const Billing = () => {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'annual'
 
   const monthlyPrice = 5;
-  const annualPrice  = Math.round(monthlyPrice * 12 * 0.8); // 20% off
+  const annualPrice = Math.round(monthlyPrice * 12 * 0.8); // 20% off
 
   return (
     <div className="max-w-3xl space-y-6">
       {/* Current plan banner */}
-      <div className={`rounded-3xl p-6 border flex items-center justify-between gap-4 ${
-        currentPlan === 'pro' ? 'bg-black border-black text-white' : 'bg-white border-gray-100'
-      } shadow-sm`}>
+      <div className={`rounded-3xl p-6 border flex items-center justify-between gap-4 ${currentPlan === 'pro' ? 'bg-black border-black text-white' : 'bg-white border-gray-100'
+        } shadow-sm`}>
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-            currentPlan === 'pro' ? 'bg-[#d4ff3f]' : 'bg-gray-100'
-          }`}>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${currentPlan === 'pro' ? 'bg-[#d4ff3f]' : 'bg-gray-100'
+            }`}>
             <svg className="w-6 h-6 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
               <circle cx="12" cy="12" r="2" />
@@ -55,9 +53,8 @@ const Billing = () => {
             </p>
           </div>
         </div>
-        <span className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide ${
-          currentPlan === 'pro' ? 'bg-[#d4ff3f] text-black' : 'bg-gray-100 text-gray-600'
-        }`}>
+        <span className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide ${currentPlan === 'pro' ? 'bg-[#d4ff3f] text-black' : 'bg-gray-100 text-gray-600'
+          }`}>
           {currentPlan === 'pro' ? 'Active' : 'Free forever'}
         </span>
       </div>
@@ -71,9 +68,8 @@ const Billing = () => {
               <button
                 key={cycle}
                 onClick={() => setBillingCycle(cycle)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${
-                  billingCycle === cycle ? 'bg-black text-white shadow-sm' : 'text-gray-500'
-                }`}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${billingCycle === cycle ? 'bg-black text-white shadow-sm' : 'text-gray-500'
+                  }`}
               >
                 {cycle}
                 {cycle === 'annual' && (

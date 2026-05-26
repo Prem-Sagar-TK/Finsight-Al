@@ -97,10 +97,10 @@ const Insights = () => {
   const storedTx = transactions;
   const hasData = storedTx.length > 0;
 
-  const totalIncome  = storedTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+  const totalIncome = storedTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
   const totalExpense = storedTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-  const balance      = totalIncome - totalExpense;
-  const savingsRate  = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
+  const balance = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome) * 100 : 0;
 
   // Category spending
   const categoryMap = {};
