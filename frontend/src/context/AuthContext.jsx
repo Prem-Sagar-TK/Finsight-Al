@@ -31,10 +31,10 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const { data } = await api.post('/auth/register', { name, email, password });
-      const session = { id: data._id, name: data.name, email: data.email, token: data.token };
+      const session = { id: data._id, name: data.name, email: data.email, role: data.role, token: data.token };
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       setCurrentUser(session);
-      return { success: true };
+      return { success: true, role: data.role };
     } catch (err) {
       return {
         success: false,
@@ -47,10 +47,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      const session = { id: data._id, name: data.name, email: data.email, token: data.token };
+      const session = { id: data._id, name: data.name, email: data.email, role: data.role, token: data.token };
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       setCurrentUser(session);
-      return { success: true };
+      return { success: true, role: data.role };
     } catch (err) {
       return {
         success: false,

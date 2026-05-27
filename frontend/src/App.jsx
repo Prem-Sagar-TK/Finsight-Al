@@ -14,11 +14,20 @@ import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { currentUser } = useAuth();
   if (!currentUser) return <Navigate to="/login" />;
+  return children;
+};
+
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const { currentUser } = useAuth();
+  if (!currentUser) return <Navigate to="/login" />;
+  if (currentUser.role !== 'admin') return <Navigate to="/dashboard" />;
   return children;
 };
 
@@ -46,6 +55,11 @@ function AppRoutes() {
             <Route path="reports" element={<Reports />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="admin" element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            } />
           </Route>
         </Routes>
     </div>

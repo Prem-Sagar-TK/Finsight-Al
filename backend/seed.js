@@ -33,6 +33,15 @@ const seedData = async () => {
     });
     console.log('Demo User created: demo@finsight.com / password123');
 
+    // ── Create Admin User ───────────────────────────────────────────────
+    const adminUser = await User.create({
+      name: 'Admin User',
+      email: 'admin@finsight.com',
+      password: 'adminpassword123', // Hashed by pre-save middleware
+      role: 'admin',
+    });
+    console.log('Admin User created: admin@finsight.com / adminpassword123');
+
     // ── Helper: date N months ago, on a certain day ─────────────────────
     const now = new Date();
     const getDate = (monthsAgo, day) => {
