@@ -6,7 +6,7 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('finsight_settings');
+    const saved = localStorage.getItem('intellora_settings');
     if (saved) {
       try { return JSON.parse(saved).darkMode || false; } catch { return false; }
     }
@@ -20,9 +20,9 @@ export const ThemeProvider = ({ children }) => {
       document.documentElement.classList.remove('dark');
     }
     // persist preference
-    const saved = JSON.parse(localStorage.getItem('finsight_settings') || '{}');
+    const saved = JSON.parse(localStorage.getItem('intellora_settings') || '{}');
     saved.darkMode = darkMode;
-    localStorage.setItem('finsight_settings', JSON.stringify(saved));
+    localStorage.setItem('intellora_settings', JSON.stringify(saved));
   }, [darkMode]);
 
   const toggleDarkMode = () => setDarkMode(prev => !prev);

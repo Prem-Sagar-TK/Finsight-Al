@@ -1,8 +1,8 @@
-# 💰 FinSight AI — Smart Fintech Dashboard
+# 💰 Intellora — Smart Fintech Dashboard
 
 > A full-stack AI-powered personal finance management platform built with React + Node.js + MongoDB.
 
-![FinSight AI](https://img.shields.io/badge/FinSight-AI-6366f1?style=for-the-badge)
+![Intellora](https://img.shields.io/badge/Intellora-6366f1?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=node.js)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=for-the-badge&logo=mongodb)
@@ -12,7 +12,7 @@
 
 ## 📖 Overview
 
-**FinSight AI** is a modern personal finance dashboard that helps users track spending, manage budgets, analyze financial insights, and monitor subscriptions — all in one place. The app features JWT-based authentication, interactive Chart.js visualizations, CSV export, dark/light mode, and a clean responsive UI.
+**Intellora** is a modern personal finance dashboard that helps users track spending, manage budgets, analyze financial insights, and monitor subscriptions — all in one place. The app features JWT-based authentication, interactive Chart.js visualizations, CSV export, dark/light mode, and a clean responsive UI.
 
 ---
 
@@ -155,7 +155,7 @@ Create a `.env` file in the `backend/` directory:
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/finsight
+MONGODB_URI=mongodb://localhost:27017/intellora
 JWT_SECRET=your_super_secret_jwt_key_here
 ```
 
@@ -264,7 +264,7 @@ node seed.js
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Server port | `5000` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/finsight` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/intellora` |
 | `JWT_SECRET` | Secret key for signing JWTs | *(required)* |
 
 ---

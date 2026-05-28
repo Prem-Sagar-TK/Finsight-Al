@@ -1,6 +1,6 @@
 # Implementation Plan - Admin Page & Panel
 
-This plan outlines the steps required to implement a robust, high-performance, and visually stunning Admin page for FinSight AI. The admin panel will allow administrators to view application statistics, manage user details, change user roles, delete accounts (along with associated data to maintain database integrity), and monitor system health.
+This plan outlines the steps required to implement a robust, high-performance, and visually stunning Admin page for Intellora. The admin panel will allow administrators to view application statistics, manage user details, change user roles, delete accounts (along with associated data to maintain database integrity), and monitor system health.
 
 ## User Review Required
 
@@ -8,7 +8,7 @@ This plan outlines the steps required to implement a robust, high-performance, a
 > Database integrity: Deleting a user will trigger cascade deletion of their transactions, budgets, and subscriptions. This action is irreversible. We will add a double-confirmation modal on the frontend to prevent accidental deletions.
 
 > [!NOTE]
-> We will seed an administrator account (`admin@finsight.com` / `adminpassword123`) to make testing and validation easy.
+> We will seed an administrator account (`admin@intellora.com` / `adminpassword123`) to make testing and validation easy.
 
 ## Proposed Changes
 
@@ -54,7 +54,7 @@ To support the admin functionality, we will modify the User model, secure the ad
 - Mount `adminRoutes` at `/api/admin`.
 
 #### [MODIFY] [seed.js](file:///d:/GitProjects/Finsight-Al/backend/seed.js)
-- Update the seed script to create a default administrator user (`admin@finsight.com` with password `adminpassword123`).
+- Update the seed script to create a default administrator user (`admin@intellora.com` with password `adminpassword123`).
 
 ---
 
@@ -65,7 +65,7 @@ We will capture the user's role in the Authentication context, conditionally ren
 ---
 
 #### [MODIFY] [AuthContext.jsx](file:///d:/GitProjects/Finsight-Al/frontend/src/context/AuthContext.jsx)
-- Update register/login functions to extract the `role` from the response payload and store it in `finsight_session` inside `localStorage`.
+- Update register/login functions to extract the `role` from the response payload and store it in `intellora_session` inside `localStorage`.
 
 #### [MODIFY] [DashboardLayout.jsx](file:///d:/GitProjects/Finsight-Al/frontend/src/layouts/DashboardLayout.jsx)
 - Conditionally append an **Admin Panel** link to `navItems` if the authenticated user has the `admin` role.
@@ -93,7 +93,7 @@ We will capture the user's role in the Authentication context, conditionally ren
 
 ### Manual Verification
 1. Run `node seed.js` in the `backend` directory to initialize the database with both user and admin profiles.
-2. Open the web interface, sign in as `admin@finsight.com` / `adminpassword123`.
+2. Open the web interface, sign in as `admin@intellora.com` / `adminpassword123`.
 3. Confirm the presence of the "Admin Panel" in the sidebar navigation.
 4. Interact with the Admin panel:
    - Perform user search.

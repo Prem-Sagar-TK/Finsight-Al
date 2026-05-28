@@ -30,9 +30,9 @@ const Admin = () => {
 
   // Live Console Logs state
   const [logs, setLogs] = useState([
-    { time: '22:30:05', type: 'SYS', msg: 'FinSight AI Admin Panel initialized.' },
+    { time: '22:30:05', type: 'SYS', msg: 'Intellora Admin Panel initialized.' },
     { time: '22:30:08', type: 'DB', msg: 'Database connection pools initialized.' },
-    { time: '22:30:12', type: 'AUTH', msg: 'JWT session authenticated for admin@finsight.com' },
+    { time: '22:30:12', type: 'AUTH', msg: 'JWT session authenticated for admin@intellora.com' },
     { time: '22:30:15', type: 'API', msg: 'GET /api/admin/stats - 200 OK (3.2ms)' },
     { time: '22:30:20', type: 'API', msg: 'GET /api/admin/users - 200 OK (5.8ms)' },
   ]);

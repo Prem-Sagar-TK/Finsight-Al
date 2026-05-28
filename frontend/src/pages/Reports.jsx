@@ -37,7 +37,7 @@ const Reports = () => {
   const [selectedYear, setSelectedYear]   = useState(now.getFullYear());
   const [downloaded, setDownloaded]       = useState(false);
 
-  const allTx = useMemo(() => JSON.parse(localStorage.getItem('finsight_transactions') || '[]'), []);
+  const allTx = useMemo(() => JSON.parse(localStorage.getItem('intellora_transactions') || '[]'), []);
 
   // Filter by selected month/year
   const monthlyTx = useMemo(() =>
@@ -136,7 +136,7 @@ const Reports = () => {
   // Download report as CSV
   const handleDownload = () => {
     const monthName = MONTHS[selectedMonth - 1];
-    let csv = `FinSight AI — Financial Report\n`;
+    let csv = `Intellora — Financial Report\n`;
     csv += `Period: ${monthName} ${selectedYear}\n\n`;
     csv += `Summary\n`;
     csv += `Total Income,$${monthIncome.toLocaleString()}\n`;
@@ -155,7 +155,7 @@ const Reports = () => {
       csv += `${t.date},${t.description},${t.type},${t.category},$${Number(t.amount).toLocaleString()}\n`;
     });
 
-    downloadFile(csv, `FinSight_Report_${monthName}_${selectedYear}.csv`);
+    downloadFile(csv, `Intellora_Report_${monthName}_${selectedYear}.csv`);
     setDownloaded(true);
     setTimeout(() => setDownloaded(false), 3000);
   };

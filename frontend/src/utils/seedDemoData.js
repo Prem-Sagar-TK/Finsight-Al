@@ -1,13 +1,13 @@
 /**
- * FinSight AI — Frontend Demo Data Seeder
+ * Intellora — Frontend Demo Data Seeder
  *
  * Call seedDemoData() to populate localStorage with sample
  * transactions and budgets for demonstration purposes.
  * This mirrors the backend seed.js but works entirely client-side.
  */
 
-const TRANSACTIONS_KEY = 'finsight_transactions';
-const BUDGETS_KEY      = 'finsight_budgets';
+const TRANSACTIONS_KEY = 'intellora_transactions';
+const BUDGETS_KEY      = 'intellora_budgets';
 
 function getDate(daysAgo) {
   const d = new Date();

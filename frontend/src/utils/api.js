@@ -6,7 +6,7 @@ const api = axios.create({
 
 // Attach JWT token to every request automatically
 api.interceptors.request.use((config) => {
-  const session = localStorage.getItem('finsight_session');
+  const session = localStorage.getItem('intellora_session');
   if (session) {
     try {
       const { token } = JSON.parse(session);

@@ -46,7 +46,7 @@ const Login = () => {
             </svg>
           </div>
           <h1 className="text-3xl font-extrabold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 mt-2 text-sm font-medium">Sign in to your FinSight account</p>
+          <p className="text-gray-500 mt-2 text-sm font-medium">Sign in to your Intellora account</p>
         </div>
 
         {error && (

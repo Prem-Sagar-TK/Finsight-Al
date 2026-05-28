@@ -15,7 +15,7 @@ const Profile = () => {
     e.preventDefault();
     // Persist to session in localStorage
     const session = { ...currentUser, name, email };
-    localStorage.setItem('finsight_session', JSON.stringify(session));
+    localStorage.setItem('intellora_session', JSON.stringify(session));
     setSaved(true);
     setEditing(false);
     setTimeout(() => setSaved(false), 3000);

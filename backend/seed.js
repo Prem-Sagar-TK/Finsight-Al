@@ -7,7 +7,7 @@ const Subscription = require('./src/models/Subscription');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsight');
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/intellora');
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
@@ -28,19 +28,19 @@ const seedData = async () => {
     // ── Create Demo User ────────────────────────────────────────────────
     const user = await User.create({
       name: 'Demo User',
-      email: 'demo@finsight.com',
+      email: 'demo@intellora.com',
       password: 'password123', // Hashed by pre-save middleware
     });
-    console.log('Demo User created: demo@finsight.com / password123');
+    console.log('Demo User created: demo@intellora.com / password123');
 
     // ── Create Admin User ───────────────────────────────────────────────
     const adminUser = await User.create({
       name: 'Admin User',
-      email: 'admin@finsight.com',
+      email: 'admin@intellora.com',
       password: 'adminpassword123', // Hashed by pre-save middleware
       role: 'admin',
     });
-    console.log('Admin User created: admin@finsight.com / adminpassword123');
+    console.log('Admin User created: admin@intellora.com / adminpassword123');
 
     // ── Helper: date N months ago, on a certain day ─────────────────────
     const now = new Date();
@@ -145,7 +145,7 @@ const seedData = async () => {
     console.log('5 Subscriptions seeded');
 
     console.log('\n✅ Seed Complete!');
-    console.log('Login at: demo@finsight.com / password123');
+    console.log('Login at: demo@intellora.com / password123');
     process.exit();
   } catch (error) {
     console.error('Error seeding data:', error);

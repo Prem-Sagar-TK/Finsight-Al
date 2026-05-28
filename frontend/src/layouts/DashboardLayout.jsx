@@ -63,8 +63,8 @@ const initials = (name = '') =>
 function generateNotifications() {
   const notifications = [];
   const now = new Date();
-  const transactions = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
-  const budgets = JSON.parse(localStorage.getItem('finsight_budgets') || '[]');
+  const transactions = JSON.parse(localStorage.getItem('intellora_transactions') || '[]');
+  const budgets = JSON.parse(localStorage.getItem('intellora_budgets') || '[]');
 
   // Budget alerts
   const currentBudgets = budgets.filter(b => b.month === now.getMonth() + 1 && b.year === now.getFullYear());
@@ -165,7 +165,7 @@ const DashboardLayout = () => {
   /* Search transactions */
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    const tx = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+    const tx = JSON.parse(localStorage.getItem('intellora_transactions') || '[]');
     const q = searchQuery.toLowerCase();
     return tx
       .filter(t => t.description?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q) || t.note?.toLowerCase().includes(q))
@@ -188,11 +188,11 @@ const DashboardLayout = () => {
               <div className="flex items-center gap-2.5">
                 <div className="bg-[#d4ff3f] rounded-lg p-1.5">
                   <svg className="w-5 h-5 text-black" viewBox="0 0 100 100" fill="none">
-                    <path d="M30 75V25H75V40H48V50H65V65H48V75H30Z" fill="currentColor"/>
+                    <path d="M30 25H70V40H60V60H70V75H30V60H40V40H30Z" fill="currentColor"/>
                     <circle cx="75" cy="75" r="10" fill="currentColor"/>
                   </svg>
                 </div>
-                <span className="text-lg font-extrabold tracking-tight">FinSight AI</span>
+                <span className="text-lg font-extrabold tracking-tight">Intellora</span>
               </div>
               <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -253,11 +253,11 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-2.5">
             <div className="bg-[#d4ff3f] rounded-lg p-1.5">
               <svg className="w-5 h-5 text-black" viewBox="0 0 100 100" fill="none">
-                <path d="M30 75V25H75V40H48V50H65V65H48V75H30Z" fill="currentColor"/>
+                <path d="M30 25H70V40H60V60H70V75H30V60H40V40H30Z" fill="currentColor"/>
                 <circle cx="75" cy="75" r="10" fill="currentColor"/>
               </svg>
             </div>
-            <span className="text-lg font-extrabold tracking-tight">FinSight AI</span>
+            <span className="text-lg font-extrabold tracking-tight">Intellora</span>
           </div>
         </div>
 

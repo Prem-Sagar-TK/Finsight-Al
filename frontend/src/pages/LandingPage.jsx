@@ -41,7 +41,7 @@ const LandingPage = () => (
               <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
             </svg>
           </div>
-          <span>FinSight <span className="text-[#9fe870]">AI</span></span>
+          <span>Intellora</span>
         </div>
 
         {/* Links */}
@@ -129,7 +129,7 @@ const LandingPage = () => (
                     <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
                   </svg>
                 </div>
-                <span className="text-white text-xs font-black">FinSight AI</span>
+                <span className="text-white text-xs font-black">Intellora</span>
               </div>
               {[
                 { label: 'Dashboard', active: true },
@@ -251,7 +251,7 @@ const LandingPage = () => (
             <FeatureRow
               icon={<svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3h18M3 9h18M3 15h18M3 21h18" /></svg>}
               title="CSV import from any bank"
-              body="Bulk-upload transactions from any bank in seconds — FinSight handles the parsing automatically."
+              body="Bulk-upload transactions from any bank in seconds — Intellora handles the parsing automatically."
             />
           </div>
           <Link to="/register"
@@ -367,7 +367,7 @@ const LandingPage = () => (
             Budget smarter,<br />spend with confidence
           </h2>
           <p className="text-gray-500 text-lg mb-6 leading-relaxed">
-            Set monthly limits per category and get instant alerts before you overspend. FinSight AI adjusts recommendations based on your history.
+            Set monthly limits per category and get instant alerts before you overspend. Intellora adjusts recommendations based on your history.
           </p>
           <div className="space-y-0 mb-8">
             <FeatureRow
@@ -378,7 +378,7 @@ const LandingPage = () => (
             <FeatureRow
               icon={<svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
               title="Subscription tracker"
-              body="FinSight auto-detects recurring charges so you never pay for forgotten subscriptions."
+              body="Intellora auto-detects recurring charges so you never pay for forgotten subscriptions."
             />
           </div>
           <Link to="/register"
@@ -439,7 +439,7 @@ const LandingPage = () => (
               Loved by people<br />who care about money
             </h2>
             <p className="text-gray-400 text-lg font-medium mb-8">
-              From college students to professionals — FinSight AI helps real people build better financial habits.
+              From college students to professionals — Intellora helps real people build better financial habits.
             </p>
             <Link to="/register"
               className="inline-flex items-center gap-2 bg-[#9fe870] text-black font-bold px-6 py-3.5 rounded-full hover:bg-[#8fda60] transition-all text-sm">
@@ -449,7 +449,7 @@ const LandingPage = () => (
 
           <div className="space-y-4">
             {[
-              { q: 'FinSight completely changed how I think about money. The AI insights are genuinely useful and actionable.', a: 'Priya S.', role: 'Student' },
+              { q: 'Intellora completely changed how I think about money. The AI insights are genuinely useful and actionable.', a: 'Priya S.', role: 'Student' },
               { q: "The health score gave me a wake-up call. I've saved a lot more this year just by following the weekly tips.", a: 'Rahul M.', role: 'Software Engineer' },
               { q: 'The budget alerts literally stopped me from overspending on dining three months in a row.', a: 'Anjali K.', role: 'Marketing Manager' },
             ].map((rev, i) => (
@@ -491,7 +491,7 @@ const LandingPage = () => (
           Your financial future<br />starts now
         </h2>
         <p className="text-black/65 text-lg mb-10 font-medium">
-          Join thousands of people who've taken control of their money with FinSight AI.
+          Join thousands of people who've taken control of their money with Intellora.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/register"
@@ -518,7 +518,7 @@ const LandingPage = () => (
                   <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
                 </svg>
               </div>
-              FinSight <span className="text-[#9fe870]">AI</span>
+              Intellora
             </div>
             <p className="text-sm text-gray-500 font-medium leading-relaxed max-w-xs">
               The smart, AI-powered way to understand and manage your personal finances.
@@ -542,8 +542,7 @@ const LandingPage = () => (
           ))}
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-gray-100 gap-4">
-          <p className="text-sm text-gray-400 font-medium">© 2025 FinSight AI. All rights reserved.</p>
-          <p className="text-sm text-gray-400 font-medium">Made with ♥ for financial freedom</p>
+          <p className="text-sm text-gray-400 font-medium">© 2025 Intellora. All rights reserved.</p>
         </div>
       </div>
     </footer>

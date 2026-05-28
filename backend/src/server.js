@@ -28,7 +28,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'FinSight AI API is running' });
+  res.status(200).json({ status: 'ok', message: 'Intellora API is running' });
 });
 
 const PORT = process.env.PORT || 5000;

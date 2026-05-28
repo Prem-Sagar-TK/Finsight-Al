@@ -19,8 +19,8 @@ export const CURRENCIES = [
   { code: 'RUB', symbol: '₽', name: 'Russian Ruble',  locale: 'ru-RU' },
 ];
 
-const STORAGE_KEY = 'finsight_currency';
-const SETUP_KEY   = 'finsight_currency_setup_done';
+const STORAGE_KEY = 'intellora_currency';
+const SETUP_KEY   = 'intellora_currency_setup_done';
 
 const CurrencyContext = createContext();
 

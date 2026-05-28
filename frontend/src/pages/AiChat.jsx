@@ -16,8 +16,8 @@ function buildResponder(transactions) {
   function respond(msg) {
     const m = msg.toLowerCase();
 
-    if (/hi|hello|hey|howdy/.test(m)) return `Hey! 👋 I'm your FinSight AI assistant. Ask me about your balance, spending, tips, or budget!`;
-    if (/who are you|what are you/.test(m)) return `I'm your **FinSight AI assistant** — a smart financial companion that analyzes your transaction data to give you personalized insights. 💡`;
+    if (/hi|hello|hey|howdy/.test(m)) return `Hey! 👋 I'm your Intellora assistant. Ask me about your balance, spending, tips, or budget!`;
+    if (/who are you|what are you/.test(m)) return `I'm your **Intellora assistant** — a smart financial companion that analyzes your transaction data to give you personalized insights. 💡`;
 
     if (/balance/.test(m)) {
       if (transactions.length === 0) return `No transactions found yet. Add some on the Transactions page first!`;
@@ -51,7 +51,7 @@ function buildResponder(transactions) {
     }
 
     if (/budget/.test(m)) {
-      const budgets = JSON.parse(localStorage.getItem('finsight_budgets') || '[]');
+      const budgets = JSON.parse(localStorage.getItem('intellora_budgets') || '[]');
       if (budgets.length === 0) return `You haven't set any budgets yet. Head to the **Budget Planner** page to set monthly limits per category!`;
       const now = new Date();
       const curr = budgets.filter(b => b.month === now.getMonth() + 1 && b.year === now.getFullYear());
@@ -125,12 +125,12 @@ const AiChat = () => {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-    { role: 'ai', text: "Hi! I'm your **FinSight AI** assistant 👋\nAsk me about your balance, spending, budget, or tips!" }
+    { role: 'ai', text: "Hi! I'm your **Intellora** assistant 👋\nAsk me about your balance, spending, budget, or tips!" }
   ]);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
-  const transactions = useMemo(() => JSON.parse(localStorage.getItem('finsight_transactions') || '[]'), [open]);
+  const transactions = useMemo(() => JSON.parse(localStorage.getItem('intellora_transactions') || '[]'), [open]);
   const respond = useMemo(() => buildResponder(transactions), [transactions]);
 
   useEffect(() => {
@@ -180,7 +180,7 @@ const AiChat = () => {
               <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" /></svg>
             </div>
             <div>
-              <p className="text-white font-extrabold text-sm">FinSight AI</p>
+              <p className="text-white font-extrabold text-sm">Intellora</p>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <p className="text-gray-400 text-xs font-medium">Online</p>

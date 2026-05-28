@@ -39,7 +39,7 @@ const Settings = () => {
   const toggle = (key) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
 
   const handleSave = () => {
-    localStorage.setItem('finsight_settings', JSON.stringify(prefs));
+    localStorage.setItem('intellora_settings', JSON.stringify(prefs));
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -74,7 +74,7 @@ const Settings = () => {
         <Toggle
           enabled={prefs.aiTips} onChange={() => toggle('aiTips')}
           label="AI Personalised Tips"
-          description="Let FinSight AI send you money-saving suggestions"
+          description="Let Intellora send you money-saving suggestions"
         />
       </div>
 
